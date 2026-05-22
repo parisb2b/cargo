@@ -1,0 +1,72 @@
+RAPPORT DE DÉPLOIEMENT — CONTAINER OPTIMIZER
+==============================================
+
+Date : 2026-05-22
+Projet : Container Load Optimizer (CARGO)
+Domaine cible : cargo.sasfr.com
+
+──────────────────────────────────────────────
+
+1. URL DE PRODUCTION VERCEL
+──────────────────────────────────────────────
+Production  : https://cargo-blo8e1nw1-parisb2bs-projects.vercel.app
+Alias       : https://cargo-pied-kappa.vercel.app
+Inspect     : https://vercel.com/parisb2bs-projects/cargo/DSKuBbvNAgVrSbCt2ch98m3Gwe5g
+
+2. DÉPÔT GITHUB
+──────────────────────────────────────────────
+URL         : https://github.com/parisb2b/cargo
+Visibilité  : Public
+Branche     : master
+Commit      : Initial commit: Container Optimizer avec Firebase Firestore
+
+3. ARCHITECTURE FIRESTORE
+──────────────────────────────────────────────
+Projet Firebase : cargo-optimizer-fca82
+Collection      : cargo_sessions
+Règles          : Lecture/écriture publique (sans authentification)
+
+Structure d'un document cargo_sessions :
+  - id (string)           : Identifiant unique de session
+  - name (string)         : Nom du chargement
+  - created (string)      : Date de création (format FR)
+  - container (map)       : Dimensions {l, w, h, max, type}
+  - colis (array)         : Liste des colis [colorIdx, ref, L, l, H, qty, poids, rotation, fragilite]
+  - updatedAt (timestamp) : Horodatage serveur Firestore
+
+Synchronisation :
+  - Écouteur temps réel (onSnapshot) sur la collection cargo_sessions
+  - Tri par updatedAt décroissant (plus récents en premier)
+  - Sauvegarde automatique à chaque modification
+
+4. MODIFICATIONS APPORTÉES
+──────────────────────────────────────────────
+Fichier source : container-optimizer OK.html → index.html
+
+Modifications :
+  - Ajout Firebase SDK (app-compat + firestore-compat) v10.14.1
+  - Remplacement localStorage par Firestore pour le stockage des sessions
+  - Collection centralisée cargo_sessions (accès public sans auth)
+  - Écouteur temps réel pour synchronisation multi-utilisateurs
+  - Badge "Sauvegardé" avec traduction FR/中文
+  - Interface "Historique des cargos" / "货运历史记录"
+  - Suppression cloud avec confirmation
+  - Bouton "Nouveau chargement" connecté à Firestore
+
+5. FICHIERS DU PROJET
+──────────────────────────────────────────────
+  - index.html                   : Application principale
+  - container-optimizer OK.html  : Source originale (conservée)
+  - PROMPT-CARGO.md              : Spécifications du projet
+  - .gitignore                   : Exclusions Git
+  - vercel.json                  : Configuration de déploiement Vercel
+
+6. TECHNOLOGIES
+──────────────────────────────────────────────
+  - Frontend       : HTML5, CSS3, JavaScript (Vanilla)
+  - 3D             : Three.js r128 (WebGL)
+  - Algorithme     : EP-3DBP (Extreme Point 3D Bin Packing)
+  - Base de données: Firebase Firestore (NoSQL)
+  - Export         : SheetJS (Excel), PNG Canvas, Impression PDF
+  - Hébergement    : Vercel (Static Deployment)
+  - Langues        : Français / 中文 (bilingue)
