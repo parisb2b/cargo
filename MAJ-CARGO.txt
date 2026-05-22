@@ -43,15 +43,22 @@ Synchronisation :
 ──────────────────────────────────────────────
 Fichier source : container-optimizer OK.html → index.html
 
-Modifications :
+Modifications v1 (Firestore) :
   - Ajout Firebase SDK (app-compat + firestore-compat) v10.14.1
   - Remplacement localStorage par Firestore pour le stockage des sessions
   - Collection centralisée cargo_sessions (accès public sans auth)
   - Écouteur temps réel pour synchronisation multi-utilisateurs
   - Badge "Sauvegardé" avec traduction FR/中文
-  - Interface "Historique des cargos" / "货运历史记录"
   - Suppression cloud avec confirmation
   - Bouton "Nouveau chargement" connecté à Firestore
+
+Modifications v2 (Navigation) :
+  - Nouvel onglet « Liste des cargos » / « 货运列表 » dans le menu supérieur gauche
+  - Icône SVG (maison) intégrée à l'onglet pour visibilité immédiate
+  - Panneau de liste réorganisé en 2 sections distinctes :
+    · « En cours » / « 进行中 » — cargos avec colis chargés
+    · « Historique » / « 历史记录 » — cargos vides/planifiés
+  - Chaque ligne cliquable charge instantanément les données du cargo
 
 5. FICHIERS DU PROJET
 ──────────────────────────────────────────────
