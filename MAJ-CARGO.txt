@@ -11,15 +11,15 @@ Domaine cible : cargo.sasfr.com
 ──────────────────────────────────────────────
 Production  : https://cargo-pied-kappa.vercel.app
 Alias stable: https://cargo-pied-kappa.vercel.app
-Dernier     : https://cargo-nyghx1bg2-parisb2bs-projects.vercel.app
-Inspect     : https://vercel.com/parisb2bs-projects/cargo/9KcrBjJ4RQ8ojSCwU2jaCNEptKDc
+Dernier     : https://cargo-pckc9y40t-parisb2bs-projects.vercel.app
+Inspect     : https://vercel.com/parisb2bs-projects/cargo/HRqmAxFZyDcdNnriD5b7BE99TMQB
 
 2. DÉPÔT GITHUB
 ──────────────────────────────────────────────
 URL         : https://github.com/parisb2b/cargo
 Visibilité  : Public
 Branche     : master
-Commit      : 850fba2 — Ajout bouton Enregistrer explicite avec icône
+Commit      : 09bb044 — Correctif SDK module Firebase + fallback localStorage
 
 3. ARCHITECTURE FIRESTORE
 ──────────────────────────────────────────────
@@ -67,6 +67,15 @@ Modifications v3 (Bouton Enregistrer) :
   - Sauvegarde manuelle immédiate dans Firestore au clic
   - Badge « Sauvegardé » / « 已保存 » visible 3 secondes après chaque sauvegarde
   - Sauvegarde automatique conservée en complément
+
+Modifications v4 (Correctif SDK module + fallback) :
+  - Remplacement SDK compat par SDK module ES6 (firebase-app.js + firebase-firestore.js v10.12.0)
+  - Fonctions saveToFirestore / loadAll réécrites avec setDoc / onSnapshot module
+  - Fallback localStorage automatique : sauvegarde locale si Firestore inaccessible
+  - Chargement instantané depuis localStorage au démarrage, puis sync Firestore
+  - Bouton Enregistrer avec retour visuel vert + texte confirmant la sauvegarde
+  - deleteDoc importé pour suppression propre des cargos
+  - Délai d'attente (300ms) pour l'initialisation du SDK module avant écoute Firestore
 
 5. FICHIERS DU PROJET
 ──────────────────────────────────────────────
