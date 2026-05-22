@@ -183,7 +183,10 @@
     Container<span>Optimizer</span>
   </div>
   <div class="nav-tabs">
-    <div class="nav-tab active" onclick="showPage('sessions')" id="tab-sessions">Chargements</div>
+    <div class="nav-tab active" onclick="showPage('sessions')" id="tab-sessions">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span id="tab-sessions-label">Liste des cargos</span>
+    </div>
     <div class="nav-tab" onclick="showPage('container')" id="tab-container">1 · Conteneur</div>
     <div class="nav-tab" onclick="showPage('colis')" id="tab-colis">2 · Colis</div>
     <div class="nav-tab" onclick="showPage('viz')" id="tab-viz">3 · Visualisation</div>
@@ -200,18 +203,16 @@
 
 <!-- PAGE: SESSIONS -->
 <div class="page active" id="page-sessions">
-  <div class="card">
+  <div class="card" style="margin-bottom:16px">
     <div class="card-header">
       <div>
-        <div class="card-title" id="sessions-title">Mes chargements</div>
-        <div class="card-subtitle" id="sessions-sub">Créez un chargement ou reprenez un chargement existant</div>
+        <div class="card-title" id="sessions-title">Liste des cargos</div>
+        <div class="card-subtitle" id="sessions-sub">Tous les chargements partagés en temps réel — historique complet</div>
       </div>
       <button class="btn btn-primary" onclick="openNewModal()">+ Nouveau chargement</button>
     </div>
-    <div class="session-list" id="session-list">
-      <div class="empty-state">Aucun chargement enregistré.<br>Cliquez sur "+ Nouveau chargement" pour commencer.</div>
-    </div>
   </div>
+  <div id="session-sections"></div>
 </div>
 
 <!-- PAGE: CONTENEUR -->
@@ -629,13 +630,28 @@ async function deleteSession(id, e){
 }
 
 function renderSessions(){
-  const el=document.getElementById('session-list');
+  const container=document.getElementById('session-sections');
+  if(!container) return;
   if(!sessions.length){
-    el.innerHTML='<div class="empty-state">'+t('sessions_empty')+'</div>';
+    container.innerHTML='<div class="card"><div class="empty-state">'+t('sessions_empty')+'</div></div>';
     return;
   }
-  el.innerHTML='';
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7*24*60*60*1000);
+  const activeSessions = [], historySessions = [];
   sessions.forEach(s=>{
+    const hasColis = s.colis && s.colis.some(c=>+c[2]&&+c[3]&&+c[4]);
+    if(hasColis) activeSessions.push(s);
+    else historySessions.push(s);
+  });
+  // If nothing in active, move some from history
+  if(!activeSessions.length && historySessions.length){
+    // Move the 2 most recent to active
+    const moved = historySessions.splice(0, Math.min(2, historySessions.length));
+    activeSessions.push(...moved);
+  }
+
+  function buildItem(s){
     const cVol=(s.container.l*s.container.w*s.container.h)/1000000;
     const usedVol=s.colis.reduce((sum,c)=>{
       const n=c.filter(x=>x).length>0?c:null;
@@ -659,8 +675,22 @@ function renderSessions(){
         <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
       </button>`;
     div.addEventListener('click', ()=>loadSession(s.id));
-    el.appendChild(div);
-  });
+    return div;
+  }
+
+  let html='';
+  if(activeSessions.length){
+    html+='<div class="card" style="margin-bottom:12px"><div class="card-header"><div class="card-title">'+t('section_active')+'</div><span style="font-size:11px;color:var(--text-muted)">'+activeSessions.length+' cargos</span></div><div class="session-list" id="active-list"></div></div>';
+  }
+  if(historySessions.length){
+    html+='<div class="card"><div class="card-header"><div class="card-title">'+t('section_history')+'</div><span style="font-size:11px;color:var(--text-muted)">'+historySessions.length+' cargos</span></div><div class="session-list" id="history-list"></div></div>';
+  }
+  container.innerHTML=html;
+
+  const activeEl=document.getElementById('active-list');
+  if(activeEl) activeSessions.forEach(s=>activeEl.appendChild(buildItem(s)));
+  const historyEl=document.getElementById('history-list');
+  if(historyEl) historySessions.forEach(s=>historyEl.appendChild(buildItem(s)));
 }
 
 /* ============================================================
@@ -1985,16 +2015,18 @@ const T = {
   fr: {
     // Nav
     nav_brand: 'Container<span style="color:var(--accent)">Optimizer</span>',
-    tab_sessions: 'Chargements',
+    tab_sessions: 'Liste des cargos',
     tab_container: '1 · Conteneur',
     tab_colis: '2 · Colis',
     tab_viz: '3 · Visualisation',
     tab_export: '4 · Export',
     btn_new: '+ Nouveau chargement',
     // Sessions page
-    sessions_title: 'Historique des cargos',
-    sessions_sub: 'Tous les chargements sont partagés en temps réel. Créez ou reprenez un chargement.',
+    sessions_title: 'Liste des cargos',
+    sessions_sub: 'Tous les chargements partagés en temps réel — historique complet',
     sessions_empty: 'Aucun chargement enregistré.<br>Cliquez sur « + Nouveau chargement » pour commencer.',
+    section_active: 'En cours',
+    section_history: 'Historique',
     save_badge: 'Sauvegardé',
     // Modal
     modal_title: 'Nouveau chargement',
@@ -2137,15 +2169,17 @@ const T = {
   },
   zh: {
     nav_brand: '集装箱<span style="color:var(--accent)">优化器</span>',
-    tab_sessions: '装载记录',
+    tab_sessions: '货运列表',
     tab_container: '1 · 集装箱',
     tab_colis: '2 · 货物',
     tab_viz: '3 · 可视化',
     tab_export: '4 · 导出',
     btn_new: '+ 新建装载',
-    sessions_title: '货运历史记录',
-    sessions_sub: '所有装载记录实时共享。创建新装载或继续已有记录。',
+    sessions_title: '货运列表',
+    sessions_sub: '所有装载记录实时共享 — 完整历史',
     sessions_empty: '暂无装载记录。<br>点击「+ 新建装载」开始。',
+    section_active: '进行中',
+    section_history: '历史记录',
     save_badge: '已保存',
     modal_title: '新建装载',
     modal_sub: '为此装载记录命名，方便查找。',
@@ -2290,7 +2324,7 @@ function applyLang(){
   // Nav
   si('nav-brand-el', 'nav_brand');
   s('save-badge-text','save_badge');
-  s('tab-sessions','tab_sessions'); s('tab-container','tab_container');
+  s('tab-sessions-label','tab_sessions'); s('tab-container','tab_container');
   s('tab-colis','tab_colis'); s('tab-viz','tab_viz'); s('tab-export','tab_export');
   document.querySelectorAll('.btn-new-charge').forEach(b=>b.textContent=t('btn_new'));
 
@@ -2358,7 +2392,7 @@ function applyLang(){
   Object.entries(ids_map).forEach(([id,key])=>s(id,key));
 
   // Empty state text
-  const empty=document.querySelector('#session-list .empty-state');
+  const empty=document.querySelector('#session-sections .empty-state');
   if(empty) empty.innerHTML=t('sessions_empty');
 
   // Lang toggle button

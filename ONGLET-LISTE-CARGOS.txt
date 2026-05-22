@@ -1,3 +1,12 @@
+C'est une excellente remarque. Pour que l'utilisateur puisse naviguer facilement entre la saisie en cours et ses archives, il faut ajouter un véritable onglet ou bouton **« Historique des cargos »** (ou « Liste des cargos ») dans le menu de navigation en haut à gauche, à côté de l'onglet « Conteneur ».
+
+Voici la version finale et corrigée du fichier **`PROMPT-CARGO.md`** à enregistrer dans votre répertoire. Elle demande explicitement à Claude Code d'ajouter cet élément visuel dans le menu supérieur gauche, de créer le panneau de liste associé et de tout synchroniser avec Firebase.
+
+---
+
+### 1. Contenu mis à jour pour `C:\DATA-MC-2030\CARGO\PROMPT-CARGO.md`
+
+```markdown
 # PROMPT CLAUDE CODE — Container Optimizer
 ## Déploiement Cloud avec Onglet Historique & Firestore Centralisé (Sans Auth) — cargo.sasfr.com
 
@@ -34,7 +43,8 @@
      messagingSenderId: "89903431919",
      appId: "1:89903431919:web:52c9e432d3f4839b03db1a"
    };
-   ```
+
+```
 
 2. Configurer les règles d'accès public pour la collection `cargo_sessions` afin de permettre la lecture/écriture globale sans authentification.
 
@@ -43,18 +53,22 @@
 ## ÉTAPE 2 — Interface : Ajout de l'onglet dans le Menu supérieur gauche
 
 1. **Modification du Menu Supérieur Gauche** :
-   - Dans la barre de navigation supérieure gauche (à côté ou après l'onglet actuel "Conteneur"), ajouter un nouvel onglet cliquable intitulé **« Liste des cargos »** (FR) / **« 货运列表 »** (ZH).
-   - Cet onglet doit avoir le même design épuré, la police *Inter*, et passer en état actif/surbrillance lors du clic.
+* Dans la barre de navigation supérieure gauche (à côté ou après l'onglet actuel "Conteneur"), ajouter un nouvel onglet cliquable intitulé **« Liste des cargos »** (FR) / **« 货运 Nav/列表 »** (ZH).
+* Cet onglet doit avoir le même design épuré, la police *Inter*, et passer en état actif/surbrillance lors du clic.
+
 
 2. **Panneau d'Affichage de la Liste / Historique** :
-   - Lors du clic sur l'onglet « Liste des cargos », afficher une vue ou un volet dédié présentant de façon ordonnée l'ensemble des cargos enregistrés sur Firestore.
-   - Trier et différencier clairement les cargos : l'historique (cargos passés/validés) et les planifications (nouveaux cargos créés à venir).
-   - Rendre chaque ligne cliquable : cliquer sur un cargo de la liste doit charger instantanément ses données (dimensions du conteneur, liste des colis, positionnement 3D Three.js) sur l'écran principal.
+* Lors du clic sur l'onglet « Liste des cargos », afficher une vue ou un volet dédié présentant de façon ordonnée l'ensemble des cargos enregistrés sur Firestore.
+* Trier et différencier clairement les cargos : l'historique (cargos passés/validés) et les planifications (nouveaux cargos créés à venir).
+* Rendre chaque ligne cliquable : cliquer sur un cargo de la liste doit charger instantanément ses données (dimensions du conteneur, liste des colis, positionnement 3D Three.js) sur l'écran principal.
+
 
 3. **Liaison du bouton "Nouveau chargement"** :
-   - Lors d'un clic sur le bouton existant "Nouveau chargement", ouvrir une invite propre demandant de donner un nom au nouveau cargo.
-   - Générer un nouvel ID unique dans Firestore et initialiser une structure vide prête à être éditée et sauvegardée en temps réel.
-   - Assurer une traduction rigoureuse (FR/中文) de tous les textes et messages ajoutés.
+* Lors d'un clic sur le bouton existant "Nouveau chargement", ouvrir une invite propre demandant de donner un nom au nouveau cargo.
+* Générer un nouvel ID unique dans Firestore et initialiser une structure vide prête à être éditée et sauvegardée en temps réel.
+* Assurer une traduction rigoureuse (FR/中文) de tous les textes et messages ajoutés.
+
+
 
 ---
 
@@ -71,6 +85,13 @@
 
 Générer le fichier `C:\DATA-MC-2030\CARGO\MAJ-CARGO.txt` contenant :
 
-- L'URL finale de production Vercel.
-- Le lien vers le dépôt GitHub public.
-- Le récapitulatif des modifications apportées au menu supérieur gauche et à la synchronisation Firestore.
+* L'URL finale de production Vercel.
+* Le lien vers le dépôt GitHub public.
+* Le récapitulatif des modifications apportées au menu supérieur gauche et à la synchronisation Firestore.
+
+```
+
+---
+ 
+
+```
