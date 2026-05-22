@@ -9,16 +9,17 @@ Domaine cible : cargo.sasfr.com
 
 1. URL DE PRODUCTION VERCEL
 ──────────────────────────────────────────────
-Production  : https://cargo-blo8e1nw1-parisb2bs-projects.vercel.app
-Alias       : https://cargo-pied-kappa.vercel.app
-Inspect     : https://vercel.com/parisb2bs-projects/cargo/DSKuBbvNAgVrSbCt2ch98m3Gwe5g
+Production  : https://cargo-pied-kappa.vercel.app
+Alias stable: https://cargo-pied-kappa.vercel.app
+Dernier     : https://cargo-nyghx1bg2-parisb2bs-projects.vercel.app
+Inspect     : https://vercel.com/parisb2bs-projects/cargo/9KcrBjJ4RQ8ojSCwU2jaCNEptKDc
 
 2. DÉPÔT GITHUB
 ──────────────────────────────────────────────
 URL         : https://github.com/parisb2b/cargo
 Visibilité  : Public
 Branche     : master
-Commit      : Initial commit: Container Optimizer avec Firebase Firestore
+Commit      : 850fba2 — Ajout bouton Enregistrer explicite avec icône
 
 3. ARCHITECTURE FIRESTORE
 ──────────────────────────────────────────────
@@ -59,6 +60,13 @@ Modifications v2 (Navigation) :
     · « En cours » / « 进行中 » — cargos avec colis chargés
     · « Historique » / « 历史记录 » — cargos vides/planifiés
   - Chaque ligne cliquable charge instantanément les données du cargo
+
+Modifications v3 (Bouton Enregistrer) :
+  - Bouton « Enregistrer » / « 保存 » avec icône SVG dans la barre de navigation
+  - Désactivé (grisé) quand aucun cargo n'est sélectionné, actif dès qu'un cargo est chargé
+  - Sauvegarde manuelle immédiate dans Firestore au clic
+  - Badge « Sauvegardé » / « 已保存 » visible 3 secondes après chaque sauvegarde
+  - Sauvegarde automatique conservée en complément
 
 5. FICHIERS DU PROJET
 ──────────────────────────────────────────────
