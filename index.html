@@ -194,6 +194,10 @@
   </div>
   <div class="nav-right">
     <button class="btn btn-sm btn-ghost" id="lang-toggle" onclick="toggleLang()" style="font-weight:600;letter-spacing:.3px">中文</button>
+    <button class="btn btn-sm" id="btn-save" onclick="manualSave()" disabled style="gap:5px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      <span id="btn-save-label">Enregistrer</span>
+    </button>
     <div class="save-badge" id="save-badge" style="display:none">
       <div class="save-dot"></div> <span id="save-badge-text">Sauvegardé</span>
     </div>
@@ -571,6 +575,24 @@ function showSaveBadge(){
   b._t=setTimeout(()=>b.style.display='none',3000);
 }
 
+async function manualSave(){
+  const s=getSession();
+  if(!s) return;
+  await saveToFirestore(s);
+}
+
+function updateSaveButton(){
+  const btn=document.getElementById('btn-save');
+  if(!btn) return;
+  if(currentSessionId){
+    btn.disabled=false;
+    btn.style.opacity='1';
+  } else {
+    btn.disabled=true;
+    btn.style.opacity='0.45';
+  }
+}
+
 /* ============================================================
    NAV
    ============================================================ */
@@ -609,6 +631,7 @@ async function createSession(){
   document.getElementById('new-name').value='';
   closeModal();
   await saveToFirestore(session);
+  updateSaveButton();
   initContainerUI();
   initColisTable();
   showPage('container');
@@ -616,6 +639,7 @@ async function createSession(){
 
 function loadSession(id){
   currentSessionId=id;
+  updateSaveButton();
   initContainerUI();
   initColisTable();
   renderSessions();
@@ -625,7 +649,7 @@ function loadSession(id){
 async function deleteSession(id, e){
   e.stopPropagation();
   if(!confirm(t('confirm_delete_session'))) return;
-  if(currentSessionId===id) currentSessionId=null;
+  if(currentSessionId===id){ currentSessionId=null; updateSaveButton(); }
   try { await cargoSessionsCol.doc(id).delete(); } catch(e){ console.error('Delete error:', e); }
 }
 
@@ -2028,6 +2052,7 @@ const T = {
     section_active: 'En cours',
     section_history: 'Historique',
     save_badge: 'Sauvegardé',
+    btn_save: 'Enregistrer',
     // Modal
     modal_title: 'Nouveau chargement',
     modal_sub: 'Donnez un nom à ce chargement pour le retrouver facilement.',
@@ -2181,6 +2206,7 @@ const T = {
     section_active: '进行中',
     section_history: '历史记录',
     save_badge: '已保存',
+    btn_save: '保存',
     modal_title: '新建装载',
     modal_sub: '为此装载记录命名，方便查找。',
     modal_label: '装载名称',
@@ -2324,6 +2350,7 @@ function applyLang(){
   // Nav
   si('nav-brand-el', 'nav_brand');
   s('save-badge-text','save_badge');
+  s('btn-save-label','btn_save');
   s('tab-sessions-label','tab_sessions'); s('tab-container','tab_container');
   s('tab-colis','tab_colis'); s('tab-viz','tab_viz'); s('tab-export','tab_export');
   document.querySelectorAll('.btn-new-charge').forEach(b=>b.textContent=t('btn_new'));
@@ -2412,6 +2439,7 @@ function toggleLang(){
 }
 
 loadAll();
+updateSaveButton();
 applyLang();
 // Keydown on modal input — safe after DOM ready
 document.getElementById('new-name').addEventListener('keydown',e=>{ if(e.key==='Enter') createSession(); });

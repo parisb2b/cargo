@@ -1,5 +1,5 @@
 # PROMPT CLAUDE CODE — Container Optimizer
-## Déploiement Cloud avec Onglet Historique & Firestore Centralisé (Sans Auth) — cargo.sasfr.com
+## Déploiement Cloud avec Bouton Enregistrer & Firestore Centralisé (Sans Auth) — cargo.sasfr.com
 
 ---
 
@@ -16,16 +16,15 @@
 ## CONTEXTE & OBJECTIF
 
 - **Fichier source** : `C:\DATA-MC-2030\CARGO\container-optimizer.html` à renommer/copier en `index.html`.
-- **Nature du projet** : Application d'optimisation de remplissage de conteneurs maritimes (Algorithme EP-3DBP, Vue 3D WebGL Three.js, Bilingue FR/中文, Import/Export Excel).
 - **ZÉRO AUTHENTIFICATION** : L'accès à l'application reste direct, public et anonyme. Aucun écran de connexion ou formulaire de création de compte ne doit être ajouté.
-- **CONNEXION FIRESTORE** : Centraliser tous les chargements sur Firebase Firestore pour qu'ils soient partagés en temps réel.
+- **CONNEXION FIRESTORE** : Centraliser tous les chargements sur Firebase Firestore pour qu'ils soient partagés et sauvegardés.
 
 ---
 
 ## ÉTAPE 1 — Configuration Firebase (Firestore Public)
 
-1. Initialiser le SDK Firebase Firestore directement dans le `<head>` de `index.html` avec les identifiants suivants :
-   ```javascript
+1. Initialiser le SDK Firebase Firestore directement dans le `<head>` de `index.html` avec les identifiants existants :
+```javascript
    const firebaseConfig = {
      apiKey: "AIzaSyDyk2XwTDY2tjbnUsVRI-hg3jptd9sNe2Y",
      authDomain: "cargo-optimizer-fca82.firebaseapp.com",
@@ -34,43 +33,38 @@
      messagingSenderId: "89903431919",
      appId: "1:89903431919:web:52c9e432d3f4839b03db1a"
    };
-   ```
+```
 
-2. Configurer les règles d'accès public pour la collection `cargo_sessions` afin de permettre la lecture/écriture globale sans authentification.
+2. Règles Firestore publiques pour la collection `cargo_sessions` : lecture/écriture sans authentification.
 
 ---
 
-## ÉTAPE 2 — Interface : Ajout de l'onglet dans le Menu supérieur gauche
+## ÉTAPE 2 — Interface : Bouton Enregistrer & Navigation
 
-1. **Modification du Menu Supérieur Gauche** :
-   - Dans la barre de navigation supérieure gauche (à côté ou après l'onglet actuel "Conteneur"), ajouter un nouvel onglet cliquable intitulé **« Liste des cargos »** (FR) / **« 货运列表 »** (ZH).
-   - Cet onglet doit avoir le même design épuré, la police *Inter*, et passer en état actif/surbrillance lors du clic.
+1. **Bouton Enregistrer visible** :
+   - Ajouter un bouton **« Enregistrer »** / **« 保存 »** bien visible dans la barre de navigation supérieure (à côté de « + Nouveau chargement »).
+   - Ce bouton doit enregistrer manuellement et immédiatement l'état complet du cargo en cours dans Firestore.
+   - Retour visuel : le badge "Sauvegardé" / "已保存" doit s'afficher brièvement après chaque sauvegarde réussie.
+   - Le bouton doit être désactivé visuellement (grisé) quand aucun cargo n'est sélectionné.
 
-2. **Panneau d'Affichage de la Liste / Historique** :
-   - Lors du clic sur l'onglet « Liste des cargos », afficher une vue ou un volet dédié présentant de façon ordonnée l'ensemble des cargos enregistrés sur Firestore.
-   - Trier et différencier clairement les cargos : l'historique (cargos passés/validés) et les planifications (nouveaux cargos créés à venir).
-   - Rendre chaque ligne cliquable : cliquer sur un cargo de la liste doit charger instantanément ses données (dimensions du conteneur, liste des colis, positionnement 3D Three.js) sur l'écran principal.
+2. **Sauvegarde automatique conservée** :
+   - La sauvegarde auto à chaque modification (colis, conteneur) reste active en complément du bouton manuel.
 
-3. **Liaison du bouton "Nouveau chargement"** :
-   - Lors d'un clic sur le bouton existant "Nouveau chargement", ouvrir une invite propre demandant de donner un nom au nouveau cargo.
-   - Générer un nouvel ID unique dans Firestore et initialiser une structure vide prête à être éditée et sauvegardée en temps réel.
-   - Assurer une traduction rigoureuse (FR/中文) de tous les textes et messages ajoutés.
+3. **Onglet Liste des cargos** :
+   - L'onglet « Liste des cargos » / « 货运列表 » reste dans le menu supérieur gauche.
+   - Sections « En cours » et « Historique » conservées.
 
 ---
 
 ## ÉTAPE 3 — Initialisation Git & Déploiement Vercel
 
-1. Initialiser le dépôt Git dans `C:\DATA-MC-2030\CARGO\`.
-2. Créer les fichiers `.gitignore`, `README.md` et `vercel.json` pour un déploiement statique propre.
-3. Créer de manière autonome le dépôt GitHub public `parisb2b/cargo` via la CLI `gh` et pousser le code sur `main`.
-4. Déployer sur Vercel avec la commande : `vercel --prod --yes`.
+1. `git init` dans `C:\DATA-MC-2030\CARGO\`.
+2. Créer `.gitignore` et `vercel.json`.
+3. Créer le dépôt GitHub public `parisb2b/cargo` via `gh` et pousser.
+4. Déployer sur Vercel : `vercel --prod --yes`.
 
 ---
 
-## ÉTAPE 4 — Rapport final de fin de mission
+## ÉTAPE 4 — Rapport final
 
-Générer le fichier `C:\DATA-MC-2030\CARGO\MAJ-CARGO.txt` contenant :
-
-- L'URL finale de production Vercel.
-- Le lien vers le dépôt GitHub public.
-- Le récapitulatif des modifications apportées au menu supérieur gauche et à la synchronisation Firestore.
+Générer `C:\DATA-MC-2030\CARGO\MAJ-CARGO.txt` avec URL Vercel, lien GitHub, et récapitulatif des modifications.
