@@ -171,8 +171,28 @@
   svg.icon { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDyk2XwTDY2tjbnUsVRI-hg3jptd9sNe2Y",
+    authDomain: "cargo-optimizer-fca82.firebaseapp.com",
+    projectId: "cargo-optimizer-fca82",
+    storageBucket: "cargo-optimizer-fca82.firebasestorage.app",
+    messagingSenderId: "89903431919",
+    appId: "1:89903431919:web:52c9e432d3f4839b03db1a"
+  };
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    window._db = getFirestore(app);
+    window._firestoreUtils = { collection, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp, orderBy, query };
+    console.log('Firebase Firestore initialisé.');
+  } catch (e) {
+    console.error('Erreur initialisation Firebase:', e);
+  }
+</script>
 </head>
 <body>
 
@@ -490,43 +510,51 @@
 
 <script>
 /* ============================================================
-   FIREBASE INIT
-   ============================================================ */
-const firebaseConfig = {
-  apiKey: "AIzaSyDyk2XwTDY2tjbnUsVRI-hg3jptd9sNe2Y",
-  authDomain: "cargo-optimizer-fca82.firebaseapp.com",
-  projectId: "cargo-optimizer-fca82",
-  storageBucket: "cargo-optimizer-fca82.firebasestorage.app",
-  messagingSenderId: "89903431919",
-  appId: "1:89903431919:web:52c9e432d3f4839b03db1a"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const cargoSessionsCol = db.collection('cargo_sessions');
-
-/* ============================================================
    STATE
    ============================================================ */
 const COLORS = ['#1a56db','#e3500a','#16803c','#7c3aed','#b91c1c','#0e7490','#b45309','#4338ca','#15803d','#9d174d'];
 let sessions = [];
 let currentSessionId = null;
 let activeVizMode = 'side';
-let lang = 'fr'; // 'fr' or 'zh'
+let lang = 'fr';
 let _unsubscribeFirestore = null;
 
 function getSession(){ return sessions.find(s=>s.id===currentSessionId)||null; }
 
+function _fs(){ return window._firestoreUtils; }
+function _db(){ return window._db; }
+
 async function saveToFirestore(session){
+  const fs = _fs(); const d = _db();
+  if(!fs||!d){ saveToLocal(session); return; }
   try {
-    await cargoSessionsCol.doc(session.id).set({
+    const { setDoc, doc, serverTimestamp } = fs;
+    await setDoc(doc(d, 'cargo_sessions', session.id), {
       name: session.name,
       created: session.created,
       container: session.container,
       colis: session.colis,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      updatedAt: serverTimestamp()
     });
+    // Backup localStorage
+    saveToLocal(session);
     showSaveBadge();
-  } catch(e){ console.error('Firestore save error:', e); }
+  } catch(e){
+    console.error('Firestore save error:', e);
+    saveToLocal(session);
+  }
+}
+
+function saveToLocal(session){
+  try {
+    const d=localStorage.getItem('clo_sessions');
+    let arr=d?JSON.parse(d):[];
+    const idx=arr.findIndex(s=>s.id===session.id);
+    if(idx>=0) arr[idx]=session;
+    else arr.push(session);
+    localStorage.setItem('clo_sessions', JSON.stringify(arr));
+    showSaveBadge();
+  } catch(e){}
 }
 
 function saveAll(){
@@ -535,37 +563,53 @@ function saveAll(){
 }
 
 function loadAll(){
-  _unsubscribeFirestore = cargoSessionsCol.orderBy('updatedAt','desc').onSnapshot(snapshot => {
-    sessions = [];
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      sessions.push({
-        id: doc.id,
-        name: data.name,
-        created: data.created,
-        container: data.container || { l:589, w:235, h:239, max:28000, type:'20GP' },
-        colis: data.colis || []
+  // 1. D'abord charger depuis localStorage (instantané)
+  try{
+    const d=localStorage.getItem('clo_sessions');
+    if(d) sessions=JSON.parse(d);
+  } catch(e){ sessions=[]; }
+  renderSessions();
+
+  // 2. Puis écouter Firestore (met à jour dès que connecté)
+  function startListener(){
+    const fs=_fs(); const db=_db();
+    if(!fs||!db){
+      setTimeout(startListener, 300);
+      return;
+    }
+    const { collection, onSnapshot, orderBy, query } = fs;
+    const q = query(collection(db, 'cargo_sessions'), orderBy('updatedAt','desc'));
+    _unsubscribeFirestore = onSnapshot(q, snapshot => {
+      sessions = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        sessions.push({
+          id: doc.id,
+          name: data.name,
+          created: data.created,
+          container: data.container || { l:589, w:235, h:239, max:28000, type:'20GP' },
+          colis: data.colis || []
+        });
       });
-    });
-    renderSessions();
-    if(currentSessionId){
-      const still = sessions.find(s=>s.id===currentSessionId);
-      if(still){
-        // update current session data from Firestore
-        const cur = getSession();
-        if(cur){
-          cur.name = still.name;
-          cur.container = still.container;
-          cur.colis = still.colis;
+      // Sync localStorage
+      try{ localStorage.setItem('clo_sessions', JSON.stringify(sessions)); } catch(e){}
+      renderSessions();
+      if(currentSessionId){
+        const still = sessions.find(s=>s.id===currentSessionId);
+        if(still){
+          const cur = getSession();
+          if(cur){
+            cur.name = still.name;
+            cur.container = still.container;
+            cur.colis = still.colis;
+          }
         }
       }
-    }
-  }, err => {
-    console.error('Firestore listener error:', err);
-    // Fallback localStorage
-    try{ const d=localStorage.getItem('clo_sessions'); if(d)sessions=JSON.parse(d); }catch(e){ sessions=[]; }
-    renderSessions();
-  });
+    }, err => {
+      console.error('Firestore listener error:', err);
+    });
+  }
+  setTimeout(startListener, 100);
 }
 
 function showSaveBadge(){
@@ -578,7 +622,13 @@ function showSaveBadge(){
 async function manualSave(){
   const s=getSession();
   if(!s) return;
+  const btn=document.getElementById('btn-save');
+  const origHTML=btn?btn.innerHTML:'';
+  if(btn){ btn.style.background='#166534'; btn.style.color='#fff'; btn.innerHTML='✓ '+t('save_badge'); }
   await saveToFirestore(s);
+  setTimeout(()=>{
+    if(btn){ btn.style.background=''; btn.style.color=''; btn.innerHTML=origHTML; }
+  },1500);
 }
 
 function updateSaveButton(){
@@ -650,7 +700,13 @@ async function deleteSession(id, e){
   e.stopPropagation();
   if(!confirm(t('confirm_delete_session'))) return;
   if(currentSessionId===id){ currentSessionId=null; updateSaveButton(); }
-  try { await cargoSessionsCol.doc(id).delete(); } catch(e){ console.error('Delete error:', e); }
+  const fs=_fs(); const db=_db();
+  if(fs&&db){
+    try { await fs.deleteDoc(fs.doc(db, 'cargo_sessions', id)); } catch(e){ console.error('Delete error:', e); }
+  }
+  sessions = sessions.filter(s=>s.id!==id);
+  try { localStorage.setItem('clo_sessions', JSON.stringify(sessions)); } catch(e){}
+  renderSessions();
 }
 
 function renderSessions(){
