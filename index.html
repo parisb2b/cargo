@@ -51,6 +51,9 @@
   .btn:hover { background: var(--bg); border-color: var(--border-strong); }
   .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
   .btn-primary:hover { background: #1447c0; border-color: #1447c0; }
+  #btn-save:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+  #btn-save:not(:disabled) { opacity: 1; cursor: pointer; }
+  #btn-save:not(:disabled):hover { background: var(--accent-bg); border-color: var(--accent); }
   .btn-ghost { border-color: transparent; background: transparent; }
   .btn-ghost:hover { background: var(--bg); border-color: var(--border); }
   .btn-danger { color: var(--danger); border-color: #fca5a5; background: var(--danger-bg); }
@@ -214,7 +217,7 @@
   </div>
   <div class="nav-right">
     <button class="btn btn-sm btn-ghost" id="lang-toggle" onclick="toggleLang()" style="font-weight:600;letter-spacing:.3px">中文</button>
-    <button class="btn btn-sm" id="btn-save" onclick="manualSave()" disabled style="gap:5px">
+    <button class="btn btn-sm" id="btn-save" onclick="manualSave()" style="gap:5px;transition:all .2s">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       <span id="btn-save-label">Enregistrer</span>
     </button>
@@ -637,9 +640,15 @@ function updateSaveButton(){
   if(currentSessionId){
     btn.disabled=false;
     btn.style.opacity='1';
+    btn.style.cursor='pointer';
+    btn.style.pointerEvents='auto';
+    btn.title=t('btn_save');
   } else {
     btn.disabled=true;
     btn.style.opacity='0.45';
+    btn.style.cursor='not-allowed';
+    btn.style.pointerEvents='none';
+    btn.title='';
   }
 }
 
@@ -2494,9 +2503,56 @@ function toggleLang(){
   applyLang();
 }
 
+/* ============================================================
+   TEST DATA INJECTION
+   ============================================================ */
+function injectTestCargos(){
+  const now = new Date().toLocaleDateString('fr-FR');
+  const test01 = {
+    id: 'test01-2026',
+    name: 'test01 — 20GP Export Guadeloupe',
+    created: now,
+    container: { l:589, w:235, h:239, max:28000, type:'20GP' },
+    colis: [
+      [0, 'MP-R22-MiniPelle', 220, 110, 150, 2, 1800, 'flat', 'floor'],
+      [1, 'ACCESSOIRE-PL-01', 80, 60, 45, 8, 25, 'free', 'normal'],
+      [2, 'PALETTE-BOIS-EPAL', 120, 80, 120, 4, 600, 'flat', 'normal']
+    ]
+  };
+  const test02 = {
+    id: 'test02-2026',
+    name: 'test02 — 40HC Export Martinique',
+    created: now,
+    container: { l:1203, w:235, h:269, max:26330, type:'40HC' },
+    colis: [
+      [3, 'GROUPE-ELEC-50KW', 300, 120, 180, 1, 3200, 'upright', 'fragile'],
+      [4, 'TUYAUTERIE-INOX', 400, 40, 40, 20, 15, 'free', 'normal'],
+      [5, 'CAISSE-OUTILLAGE', 100, 80, 60, 6, 200, 'free', 'fragile']
+    ]
+  };
+  // Merge into sessions (avoid duplicates)
+  const existingIds = new Set(sessions.map(s=>s.id));
+  if(!existingIds.has(test01.id)) sessions.push(test01);
+  if(!existingIds.has(test02.id)) sessions.push(test02);
+  try { localStorage.setItem('clo_sessions', JSON.stringify(sessions)); } catch(e){}
+  // Push to Firestore if available
+  [test01, test02].forEach(s=>{
+    const fs=_fs(); const db=_db();
+    if(fs&&db){
+      const { setDoc, doc, serverTimestamp } = fs;
+      setDoc(doc(db, 'cargo_sessions', s.id), {
+        name: s.name, created: s.created, container: s.container,
+        colis: s.colis, updatedAt: serverTimestamp()
+      }).catch(()=>{});
+    }
+  });
+  renderSessions();
+}
+
 loadAll();
 updateSaveButton();
 applyLang();
+injectTestCargos();
 // Keydown on modal input — safe after DOM ready
 document.getElementById('new-name').addEventListener('keydown',e=>{ if(e.key==='Enter') createSession(); });
 </script>
