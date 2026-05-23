@@ -1,0 +1,48 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - text: Container
+      - generic [ref=e4]: Optimizer
+    - generic [ref=e5]:
+      - generic [ref=e6] [cursor=pointer]:
+        - img [ref=e7]
+        - generic [ref=e10]: Liste des cargos
+      - generic [ref=e11] [cursor=pointer]: 1 · Conteneur
+      - generic [ref=e12] [cursor=pointer]: 2 · Colis
+      - generic [ref=e13] [cursor=pointer]: 3 · Visualisation
+      - generic [ref=e14] [cursor=pointer]: 4 · Export
+    - generic [ref=e15]:
+      - button "中文" [ref=e16] [cursor=pointer]
+      - button "Enregistrer" [ref=e17] [cursor=pointer]:
+        - img [ref=e18]
+        - generic [ref=e22]: Enregistrer
+      - button "+ Nouveau chargement" [ref=e23] [cursor=pointer]
+  - generic [ref=e24]:
+    - generic [ref=e26]:
+      - generic [ref=e27]:
+        - generic [ref=e28]: Liste des cargos
+        - generic [ref=e29]: Tous les chargements partagés en temps réel — historique complet
+      - button "+ Nouveau chargement" [ref=e30] [cursor=pointer]
+    - generic [ref=e32]:
+      - generic [ref=e33]:
+        - generic [ref=e34]: En cours
+        - generic [ref=e35]: 2 cargos
+      - generic [ref=e36]:
+        - generic [ref=e37] [cursor=pointer]:
+          - generic [ref=e38]:
+            - generic [ref=e39]: test01 — 20GP Export Guadeloupe
+            - generic [ref=e40]: 20GP · 3 référence(s) · créé le 23/05/2026
+          - generic [ref=e43]:
+            - text: "13.60"
+            - text: 41%
+          - button "Supprimer" [ref=e44]:
+            - img [ref=e45]
+        - generic [ref=e48] [cursor=pointer]:
+          - generic [ref=e49]:
+            - generic [ref=e50]: test02 — 40HC Export Martinique
+            - generic [ref=e51]: 40HC · 3 référence(s) · créé le 23/05/2026
+          - generic [ref=e54]:
+            - text: "22.16"
+            - text: 29%
+          - button "Supprimer" [ref=e55]:
+            - img [ref=e56]

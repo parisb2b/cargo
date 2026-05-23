@@ -1,7 +1,7 @@
 RAPPORT DE DÉPLOIEMENT — CONTAINER OPTIMIZER
 ==============================================
 
-Date : 2026-05-22
+Date : 2026-05-23
 Projet : Container Load Optimizer (CARGO)
 Domaine cible : cargo.sasfr.com
 
@@ -10,87 +10,54 @@ Domaine cible : cargo.sasfr.com
 1. URL DE PRODUCTION VERCEL
 ──────────────────────────────────────────────
 Production  : https://cargo-pied-kappa.vercel.app
-Alias stable: https://cargo-pied-kappa.vercel.app
-Dernier     : https://cargo-pckc9y40t-parisb2bs-projects.vercel.app
-Inspect     : https://vercel.com/parisb2bs-projects/cargo/HRqmAxFZyDcdNnriD5b7BE99TMQB
+Dernier     : https://cargo-paeqox5y3-parisb2bs-projects.vercel.app
+Inspect     : https://vercel.com/parisb2bs-projects/cargo/5XGa3w93Hv4nP6T2KNnTVDWhQDp6
 
 2. DÉPÔT GITHUB
 ──────────────────────────────────────────────
 URL         : https://github.com/parisb2b/cargo
 Visibilité  : Public
 Branche     : master
-Commit      : 09bb044 — Correctif SDK module Firebase + fallback localStorage
+Commit      : 20d1be6 — Correctif bouton Enregistrer toujours actif + renommage
 
-3. ARCHITECTURE FIRESTORE
+3. STATUT DES TESTS
+──────────────────────────────────────────────
+✅ Bouton Enregistrer : ACTIF — plus grisé ni disabled
+✅ test01 — 20GP Export Guadeloupe : 3 colis chargés (MP-R22-MiniPelle, ACCESSOIRE-PL-01, PALETTE-BOIS-EPAL)
+✅ test02 — 40HC Export Martinique : 3 colis chargés (GROUPE-ELEC-50KW, TUYAUTERIE-INOX, CAISSE-OUTILLAGE)
+✅ Navigation : onglet Liste des cargos avec sections En cours / Historique
+✅ Chargement de session : clic sur un cargo → colis affichés
+✅ Sauvegarde locale : localStorage fonctionnel en fallback
+⚠️  Firestore : règles publiques à configurer dans la console Firebase (allow read, write: if true;)
+
+4. ARCHITECTURE FIRESTORE
 ──────────────────────────────────────────────
 Projet Firebase : cargo-optimizer-fca82
 Collection      : cargo_sessions
-Règles          : Lecture/écriture publique (sans authentification)
+Règles requises : allow read, write: if true;
 
 Structure d'un document cargo_sessions :
   - id (string)           : Identifiant unique de session
   - name (string)         : Nom du chargement
   - created (string)      : Date de création (format FR)
   - container (map)       : Dimensions {l, w, h, max, type}
-  - colis (array)         : Liste des colis [colorIdx, ref, L, l, H, qty, poids, rotation, fragilite]
+  - colis (array)         : Liste des colis
   - updatedAt (timestamp) : Horodatage serveur Firestore
 
-Synchronisation :
-  - Écouteur temps réel (onSnapshot) sur la collection cargo_sessions
-  - Tri par updatedAt décroissant (plus récents en premier)
-  - Sauvegarde automatique à chaque modification
-
-4. MODIFICATIONS APPORTÉES
+5. CORRECTIFS APPLIQUÉS (v5)
 ──────────────────────────────────────────────
-Fichier source : container-optimizer OK.html → index.html
+  - Renommage _db() → fsDb() et _fs() → fsUtils() pour éviter conflits
+  - Bouton Enregistrer : TOUJOURS ACTIF (disabled retiré)
+  - Message d'aide si clic sans session sélectionnée
+  - CSS #btn-save:disabled / :not(:disabled) pour retour visuel
+  - Injection automatique de test01 et test02 au chargement
+  - Tooltip contextuel sur le bouton Enregistrer
 
-Modifications v1 (Firestore) :
-  - Ajout Firebase SDK (app-compat + firestore-compat) v10.14.1
-  - Remplacement localStorage par Firestore pour le stockage des sessions
-  - Collection centralisée cargo_sessions (accès public sans auth)
-  - Écouteur temps réel pour synchronisation multi-utilisateurs
-  - Badge "Sauvegardé" avec traduction FR/中文
-  - Suppression cloud avec confirmation
-  - Bouton "Nouveau chargement" connecté à Firestore
-
-Modifications v2 (Navigation) :
-  - Nouvel onglet « Liste des cargos » / « 货运列表 » dans le menu supérieur gauche
-  - Icône SVG (maison) intégrée à l'onglet pour visibilité immédiate
-  - Panneau de liste réorganisé en 2 sections distinctes :
-    · « En cours » / « 进行中 » — cargos avec colis chargés
-    · « Historique » / « 历史记录 » — cargos vides/planifiés
-  - Chaque ligne cliquable charge instantanément les données du cargo
-
-Modifications v3 (Bouton Enregistrer) :
-  - Bouton « Enregistrer » / « 保存 » avec icône SVG dans la barre de navigation
-  - Désactivé (grisé) quand aucun cargo n'est sélectionné, actif dès qu'un cargo est chargé
-  - Sauvegarde manuelle immédiate dans Firestore au clic
-  - Badge « Sauvegardé » / « 已保存 » visible 3 secondes après chaque sauvegarde
-  - Sauvegarde automatique conservée en complément
-
-Modifications v4 (Correctif SDK module + fallback) :
-  - Remplacement SDK compat par SDK module ES6 (firebase-app.js + firebase-firestore.js v10.12.0)
-  - Fonctions saveToFirestore / loadAll réécrites avec setDoc / onSnapshot module
-  - Fallback localStorage automatique : sauvegarde locale si Firestore inaccessible
-  - Chargement instantané depuis localStorage au démarrage, puis sync Firestore
-  - Bouton Enregistrer avec retour visuel vert + texte confirmant la sauvegarde
-  - deleteDoc importé pour suppression propre des cargos
-  - Délai d'attente (300ms) pour l'initialisation du SDK module avant écoute Firestore
-
-5. FICHIERS DU PROJET
+6. FICHIERS DU PROJET
 ──────────────────────────────────────────────
   - index.html                   : Application principale
   - container-optimizer OK.html  : Source originale (conservée)
   - PROMPT-CARGO.md              : Spécifications du projet
   - .gitignore                   : Exclusions Git
   - vercel.json                  : Configuration de déploiement Vercel
-
-6. TECHNOLOGIES
-──────────────────────────────────────────────
-  - Frontend       : HTML5, CSS3, JavaScript (Vanilla)
-  - 3D             : Three.js r128 (WebGL)
-  - Algorithme     : EP-3DBP (Extreme Point 3D Bin Packing)
-  - Base de données: Firebase Firestore (NoSQL)
-  - Export         : SheetJS (Excel), PNG Canvas, Impression PDF
-  - Hébergement    : Vercel (Static Deployment)
-  - Langues        : Français / 中文 (bilingue)
+  - MAJ-CARGO.txt                : Ce rapport

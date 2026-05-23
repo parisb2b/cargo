@@ -1,0 +1,164 @@
+- generic [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - text: Container
+      - generic [ref=e4]: Optimizer
+    - generic [ref=e5]:
+      - generic [ref=e6] [cursor=pointer]:
+        - img [ref=e7]
+        - generic [ref=e10]: Liste des cargos
+      - generic [ref=e11] [cursor=pointer]: 1 · Conteneur
+      - generic [ref=e12] [cursor=pointer]: 2 · Colis
+      - generic [ref=e13] [cursor=pointer]: 3 · Visualisation
+      - generic [ref=e14] [cursor=pointer]: 4 · Export
+    - generic [ref=e15]:
+      - button "中文" [ref=e16] [cursor=pointer]
+      - button "✓ Sauvegardé" [active] [ref=e197] [cursor=pointer]
+      - generic [ref=e200]: Sauvegardé
+      - button "+ Nouveau chargement" [ref=e23] [cursor=pointer]
+  - generic [ref=e59]:
+    - generic [ref=e60]:
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - generic [ref=e63]: Colis du chargement
+          - generic [ref=e64]: 3 référence(s)
+        - generic [ref=e65]:
+          - button "Importer Excel" [ref=e66] [cursor=pointer]:
+            - img [ref=e67]
+            - generic [ref=e70]: Importer Excel
+          - button "Modèle Excel" [ref=e71] [cursor=pointer]:
+            - img [ref=e72]
+            - generic [ref=e75]: Modèle Excel
+      - table [ref=e77]:
+        - rowgroup [ref=e78]:
+          - row "# Référence Long. (cm) Larg. (cm) H (cm) Qté Poids (kg) Orientation Fragilité M³/U Statut" [ref=e79]:
+            - columnheader "#" [ref=e80]
+            - columnheader [ref=e81]
+            - columnheader "Référence" [ref=e82]
+            - columnheader "Long. (cm)" [ref=e83]
+            - columnheader "Larg. (cm)" [ref=e84]
+            - columnheader "H (cm)" [ref=e85]
+            - columnheader "Qté" [ref=e86]
+            - columnheader "Poids (kg)" [ref=e87]
+            - columnheader "Orientation" [ref=e88]
+            - columnheader "Fragilité" [ref=e89]
+            - columnheader "M³/U" [ref=e90]
+            - columnheader "Statut" [ref=e91]
+            - columnheader [ref=e92]
+        - rowgroup [ref=e93]:
+          - row "1 MP-R22-MiniPelle 220 110 150 2 1800 À plat Plancher 3.6300 m³ OK ×" [ref=e94]:
+            - cell "1" [ref=e95]
+            - cell [ref=e96]
+            - cell "MP-R22-MiniPelle" [ref=e98]:
+              - 'textbox "ex: MP-R22" [ref=e99]': MP-R22-MiniPelle
+            - cell "220" [ref=e100]:
+              - spinbutton [ref=e101]: "220"
+            - cell "110" [ref=e102]:
+              - spinbutton [ref=e103]: "110"
+            - cell "150" [ref=e104]:
+              - spinbutton [ref=e105]: "150"
+            - cell "2" [ref=e106]:
+              - spinbutton [ref=e107]: "2"
+            - cell "1800" [ref=e108]:
+              - spinbutton [ref=e109]: "1800"
+            - cell "À plat" [ref=e110]:
+              - combobox [ref=e111] [cursor=pointer]:
+                - option "Libre"
+                - option "À l'endroit"
+                - option "À plat" [selected]
+            - cell "Plancher" [ref=e112]:
+              - combobox [ref=e113] [cursor=pointer]:
+                - option "Normal"
+                - option "Fragile"
+                - option "Plancher" [selected]
+            - cell "3.6300 m³" [ref=e114]
+            - cell "OK" [ref=e115]
+            - cell "×" [ref=e116]:
+              - button "×" [ref=e117] [cursor=pointer]
+          - row "2 ACCESSOIRE-PL-01 80 60 45 8 25 Libre Normal 0.2160 m³ OK ×" [ref=e118]:
+            - cell "2" [ref=e119]
+            - cell [ref=e120]
+            - cell "ACCESSOIRE-PL-01" [ref=e122]:
+              - 'textbox "ex: MP-R22" [ref=e123]': ACCESSOIRE-PL-01
+            - cell "80" [ref=e124]:
+              - spinbutton [ref=e125]: "80"
+            - cell "60" [ref=e126]:
+              - spinbutton [ref=e127]: "60"
+            - cell "45" [ref=e128]:
+              - spinbutton [ref=e129]: "45"
+            - cell "8" [ref=e130]:
+              - spinbutton [ref=e131]: "8"
+            - cell "25" [ref=e132]:
+              - spinbutton [ref=e133]: "25"
+            - cell "Libre" [ref=e134]:
+              - combobox [ref=e135] [cursor=pointer]:
+                - option "Libre" [selected]
+                - option "À l'endroit"
+                - option "À plat"
+            - cell "Normal" [ref=e136]:
+              - combobox [ref=e137] [cursor=pointer]:
+                - option "Normal" [selected]
+                - option "Fragile"
+                - option "Plancher"
+            - cell "0.2160 m³" [ref=e138]
+            - cell "OK" [ref=e139]
+            - cell "×" [ref=e140]:
+              - button "×" [ref=e141] [cursor=pointer]
+          - row "3 PALETTE-BOIS-EPAL 120 80 120 4 600 À plat Normal 1.1520 m³ OK ×" [ref=e142]:
+            - cell "3" [ref=e143]
+            - cell [ref=e144]
+            - cell "PALETTE-BOIS-EPAL" [ref=e146]:
+              - 'textbox "ex: MP-R22" [ref=e147]': PALETTE-BOIS-EPAL
+            - cell "120" [ref=e148]:
+              - spinbutton [ref=e149]: "120"
+            - cell "80" [ref=e150]:
+              - spinbutton [ref=e151]: "80"
+            - cell "120" [ref=e152]:
+              - spinbutton [ref=e153]: "120"
+            - cell "4" [ref=e154]:
+              - spinbutton [ref=e155]: "4"
+            - cell "600" [ref=e156]:
+              - spinbutton [ref=e157]: "600"
+            - cell "À plat" [ref=e158]:
+              - combobox [ref=e159] [cursor=pointer]:
+                - option "Libre"
+                - option "À l'endroit"
+                - option "À plat" [selected]
+            - cell "Normal" [ref=e160]:
+              - combobox [ref=e161] [cursor=pointer]:
+                - option "Normal" [selected]
+                - option "Fragile"
+                - option "Plancher"
+            - cell "1.1520 m³" [ref=e162]
+            - cell "OK" [ref=e163]
+            - cell "×" [ref=e164]:
+              - button "×" [ref=e165] [cursor=pointer]
+      - generic [ref=e166]:
+        - button "+ 5 lignes" [ref=e167] [cursor=pointer]:
+          - generic [ref=e168]: + 5 lignes
+        - button "+ 1 ligne" [ref=e169] [cursor=pointer]:
+          - generic [ref=e170]: + 1 ligne
+    - generic [ref=e171]:
+      - generic [ref=e172]:
+        - generic [ref=e173]:
+          - generic [ref=e174]: "13.596"
+          - generic [ref=e175]: m³ chargés
+        - generic [ref=e176]:
+          - generic [ref=e177]: 41.1%
+          - generic [ref=e178]: Taux remplissage
+        - generic [ref=e179]:
+          - generic [ref=e180]: 6 200
+          - generic [ref=e181]: kg total
+        - generic [ref=e182]:
+          - generic [ref=e183]: "14"
+          - generic [ref=e184]: Colis total
+        - generic [ref=e185]:
+          - generic [ref=e186]: "3"
+          - generic [ref=e187]: Références
+      - generic [ref=e190]:
+        - generic [ref=e191]: 13.596 m³ / 33.1 m³
+        - generic [ref=e192]: 19.485 m³ disponibles
+      - generic [ref=e193]:
+        - button "← Conteneur" [ref=e194] [cursor=pointer]:
+          - generic [ref=e195]: ← Conteneur
+        - button "Visualiser →" [ref=e196] [cursor=pointer]
