@@ -524,11 +524,11 @@ let _unsubscribeFirestore = null;
 
 function getSession(){ return sessions.find(s=>s.id===currentSessionId)||null; }
 
-function _fs(){ return window._firestoreUtils; }
-function _db(){ return window._db; }
+function fsUtils(){ return window._firestoreUtils; }
+function fsDb(){ return window._db; }
 
 async function saveToFirestore(session){
-  const fs = _fs(); const d = _db();
+  const fs = fsUtils(); const d = fsDb();
   if(!fs||!d){ saveToLocal(session); return; }
   try {
     const { setDoc, doc, serverTimestamp } = fs;
@@ -575,7 +575,7 @@ function loadAll(){
 
   // 2. Puis écouter Firestore (met à jour dès que connecté)
   function startListener(){
-    const fs=_fs(); const db=_db();
+    const fs=fsUtils(); const db=fsDb();
     if(!fs||!db){
       setTimeout(startListener, 300);
       return;
@@ -624,7 +624,10 @@ function showSaveBadge(){
 
 async function manualSave(){
   const s=getSession();
-  if(!s) return;
+  if(!s){
+    alert(t('alert_no_session'));
+    return;
+  }
   const btn=document.getElementById('btn-save');
   const origHTML=btn?btn.innerHTML:'';
   if(btn){ btn.style.background='#166534'; btn.style.color='#fff'; btn.innerHTML='✓ '+t('save_badge'); }
@@ -637,19 +640,12 @@ async function manualSave(){
 function updateSaveButton(){
   const btn=document.getElementById('btn-save');
   if(!btn) return;
-  if(currentSessionId){
-    btn.disabled=false;
-    btn.style.opacity='1';
-    btn.style.cursor='pointer';
-    btn.style.pointerEvents='auto';
-    btn.title=t('btn_save');
-  } else {
-    btn.disabled=true;
-    btn.style.opacity='0.45';
-    btn.style.cursor='not-allowed';
-    btn.style.pointerEvents='none';
-    btn.title='';
-  }
+  // Toujours actif — le bouton n'est jamais grisé
+  btn.disabled=false;
+  btn.style.opacity='1';
+  btn.style.cursor='pointer';
+  btn.style.pointerEvents='auto';
+  btn.title = currentSessionId ? t('btn_save') : t('btn_select_first');
 }
 
 /* ============================================================
@@ -709,7 +705,7 @@ async function deleteSession(id, e){
   e.stopPropagation();
   if(!confirm(t('confirm_delete_session'))) return;
   if(currentSessionId===id){ currentSessionId=null; updateSaveButton(); }
-  const fs=_fs(); const db=_db();
+  const fs=fsUtils(); const db=fsDb();
   if(fs&&db){
     try { await fs.deleteDoc(fs.doc(db, 'cargo_sessions', id)); } catch(e){ console.error('Delete error:', e); }
   }
@@ -2118,6 +2114,8 @@ const T = {
     section_history: 'Historique',
     save_badge: 'Sauvegardé',
     btn_save: 'Enregistrer',
+    btn_select_first: 'Sélectionnez d\'abord un cargo dans la liste',
+    alert_no_session: 'Veuillez d\'abord sélectionner ou créer un chargement dans la Liste des cargos.',
     // Modal
     modal_title: 'Nouveau chargement',
     modal_sub: 'Donnez un nom à ce chargement pour le retrouver facilement.',
@@ -2272,6 +2270,8 @@ const T = {
     section_history: '历史记录',
     save_badge: '已保存',
     btn_save: '保存',
+    btn_select_first: '请先在列表中选择一个货运记录',
+    alert_no_session: '请先在货运列表中选择或创建一个装载记录。',
     modal_title: '新建装载',
     modal_sub: '为此装载记录命名，方便查找。',
     modal_label: '装载名称',
@@ -2537,7 +2537,7 @@ function injectTestCargos(){
   try { localStorage.setItem('clo_sessions', JSON.stringify(sessions)); } catch(e){}
   // Push to Firestore if available
   [test01, test02].forEach(s=>{
-    const fs=_fs(); const db=_db();
+    const fs=fsUtils(); const db=fsDb();
     if(fs&&db){
       const { setDoc, doc, serverTimestamp } = fs;
       setDoc(doc(db, 'cargo_sessions', s.id), {
