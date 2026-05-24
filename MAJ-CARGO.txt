@@ -1,7 +1,7 @@
 RAPPORT DE DÉPLOIEMENT — CONTAINER OPTIMIZER
 ==============================================
 
-Date : 2026-05-23
+Date : 2026-05-24
 Projet : Container Load Optimizer (CARGO)
 Domaine cible : cargo.sasfr.com
 
@@ -18,9 +18,13 @@ Inspect     : https://vercel.com/parisb2bs-projects/cargo/5XGa3w93Hv4nP6T2KNnTVD
 URL         : https://github.com/parisb2b/cargo
 Visibilité  : Public
 Branche     : master
-Commit      : 20d1be6 — Correctif bouton Enregistrer toujours actif + renommage
+Commit      : 62b4b9c — Ajout CLAUDE.md + RAPPEL-SAUVEGARDE.txt
 
-3. STATUT DES TESTS
+Fichiers de verrouillage :
+  - CLAUDE.md              : Guide d'architecture
+  - RAPPEL-SAUVEGARDE.txt  : État verrouillé au 24/05/2026
+
+3. STATUT DES TESTS (validé 2026-05-24)
 ──────────────────────────────────────────────
 ✅ Bouton Enregistrer : ACTIF — plus grisé ni disabled
 ✅ test01 — 20GP Export Guadeloupe : 3 colis chargés (MP-R22-MiniPelle, ACCESSOIRE-PL-01, PALETTE-BOIS-EPAL)
