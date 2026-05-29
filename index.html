@@ -644,6 +644,11 @@ function syncFirestore(){
   sessions.forEach(function(s){
     if(!s||!s.id) return;
     var data=sanitizeForFirestore(s);
+    // Firestore rejects nested arrays — serialize colis to JSON string
+    if(data.colis&&Array.isArray(data.colis)){
+      data._colisJson=JSON.stringify(data.colis);
+      delete data.colis;
+    }
     data.updatedAt=firebase.firestore.FieldValue.serverTimestamp();
     data.syncedAt=new Date().toISOString();
     db.collection('cargo_sessions').doc(s.id).set(data)
@@ -3332,6 +3337,8 @@ window.addEventListener('firebase-ready', function(){
       snap.forEach(function(d){
         var data=d.data();
         if(!data||!data.id) return;
+        // Restore colis from JSON string (Firestore doesn't allow nested arrays)
+        if(data._colisJson){ try{ data.colis=JSON.parse(data._colisJson); delete data._colisJson; }catch(e){} }
         var idx=sessions.findIndex(function(s){ return s.id===data.id; });
         if(idx===-1){
           sessions.push(data); changed=true;
