@@ -181,27 +181,25 @@
   svg.icon { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import {
-    getFirestore, collection, doc, setDoc, deleteDoc,
-    onSnapshot, query, orderBy, serverTimestamp
-  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-  const app = initializeApp({
-    apiKey: "AIzaSyDyk2XwTDY2tjbnUsVRI-hg3jptd9sNe2Y",
-    authDomain: "cargo-optimizer-fca82.firebaseapp.com",
-    projectId: "cargo-optimizer-fca82",
-    storageBucket: "cargo-optimizer-fca82.firebasestorage.app",
-    messagingSenderId: "89903431919",
-    appId: "1:89903431919:web:52c9e432d3f4839b03db1a"
-  });
-
-  const db = getFirestore(app);
-  window._db = db;
-  window._fs = { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp };
-  window._firebaseReady = true;
-  window.dispatchEvent(new Event('firebase-ready'));
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  try {
+    const _app = firebase.initializeApp({
+      apiKey: "AIzaSyDyk2XwTDY2tjbnUsVRI-hg3jptd9sNe2Y",
+      authDomain: "cargo-optimizer-fca82.firebaseapp.com",
+      projectId: "cargo-optimizer-fca82",
+      storageBucket: "cargo-optimizer-fca82.firebasestorage.app",
+      messagingSenderId: "89903431919",
+      appId: "1:89903431919:web:52c9e432d3f4839b03db1a"
+    });
+    window._db = firebase.firestore();
+    window._firebaseReady = true;
+    window.dispatchEvent(new Event('firebase-ready'));
+    console.log('✅ Firebase Firestore initialisé');
+  } catch(e) {
+    console.error('❌ Firebase init error:', e);
+  }
 </script>
 </head>
 <body>
@@ -633,13 +631,23 @@ function hideToastOverlay(){
   if(ov){ ov.style.opacity='0'; ov.style.pointerEvents='none'; }
 }
 
+function sanitizeForFirestore(obj){
+  // Deep clone via JSON to remove undefined, functions, class instances
+  // Then ensure all values are Firestore-compatible
+  try{ return JSON.parse(JSON.stringify(obj)); }catch(e){ return {}; }
+}
+
 function syncFirestore(){
-  if(!window._firebaseReady||!window._fs) return;
-  var fss=window._fs;
+  if(!window._firebaseReady||!window._db) return;
+  var db=window._db;
   sessions.forEach(function(s){
-    fss.setDoc(fss.doc(window._db,'cargo_sessions',s.id),
-      Object.assign({},s,{updatedAt:fss.serverTimestamp()})
-    ).catch(console.error);
+    if(!s||!s.id) return;
+    var data=sanitizeForFirestore(s);
+    data.updatedAt=firebase.firestore.FieldValue.serverTimestamp();
+    data.syncedAt=new Date().toISOString();
+    db.collection('cargo_sessions').doc(s.id).set(data)
+      .then(function(){ console.log('✅ Firestore sync OK:', s.id, s.name); })
+      .catch(function(e){ console.error('❌ Firestore sync FAILED:', s.id, e.message); });
   });
 }
 
@@ -738,10 +746,10 @@ function deleteSession(id, e){
   sessionTrash.push({session:JSON.parse(JSON.stringify(s)), deletedAt:Date.now()});
   sessions=sessions.filter(x=>x.id!==id);
   if(currentSessionId===id) currentSessionId=null;
-  // Delete from Firestore
-  if(window._firebaseReady&&window._fs){
-    const{doc,deleteDoc}=window._fs;
-    deleteDoc(doc(window._db,'cargo_sessions',id)).catch(console.error);
+  // Delete from Firestore (compat API)
+  if(window._firebaseReady&&window._db){
+    window._db.collection('cargo_sessions').doc(id).delete()
+      .catch(function(e){ console.error('Delete Firestore error:', e); });
   }
   saveAll(); renderSessions();
   showToastUndo(
@@ -864,7 +872,6 @@ function renderSessions(){
   }
   el.innerHTML='';
   [...sessions].reverse().forEach(s=>{
-    if(!s.container||!s.container.l) return;
     const cVol=(s.container.l*s.container.w*s.container.h)/1000000;
     const usedVol=s.colis.reduce((sum,c)=>{
       const n=c.filter(x=>x).length>0?c:null;
@@ -1013,7 +1020,7 @@ function renderColisTable(){
       <td class="del-cell" style="display:flex;gap:3px;align-items:center">
         <button class="del-btn" style="color:var(--accent);border-color:var(--accent-border);background:var(--accent-bg)" onclick="duplicateRow(${i})" title="${t('dup_tooltip')}">⧉</button>
         <button class="del-btn" onclick="deleteRow(${i})" title="${t('del_tooltip')}">×</button>
-      </td>`;
+      </td>\`;
     tbody.appendChild(tr);
   });
   computeSummary();
@@ -3312,28 +3319,38 @@ document.getElementById('new-name').addEventListener('keydown',function(e){ if(e
 
 // Firestore real-time sync — starts when Firebase SDK is ready
 window.addEventListener('firebase-ready', function(){
-  if(!window._fs||!window._db) return;
-  var fs=window._fs;
-  fs.onSnapshot(
-    fs.query(fs.collection(window._db,'cargo_sessions'),fs.orderBy('updatedAt','desc')),
-    function(snap){
+  if(!window._db) return;
+  var db=window._db;
+  console.log('🔥 Démarrage sync Firestore...');
+  db.collection('cargo_sessions')
+    .orderBy('updatedAt','desc')
+    .onSnapshot(function(snap){
       var changed=false;
       snap.forEach(function(d){
         var data=d.data();
-        if(!data||!data.container) return; // skip invalid/incomplete docs
+        if(!data||!data.id) return;
         var idx=sessions.findIndex(function(s){ return s.id===data.id; });
-        if(idx===-1){ sessions.push(data); changed=true; }
-        else if(sessions[idx].updatedAt!==data.updatedAt){ sessions[idx]=data; changed=true; }
+        if(idx===-1){
+          sessions.push(data); changed=true;
+          console.log('🔥 Nouveau chargement reçu:', data.name);
+        } else {
+          var localTs=sessions[idx].syncedAt||'';
+          var remoteTs=data.syncedAt||'';
+          if(localTs!==remoteTs){
+            sessions[idx]=data; changed=true;
+            console.log('🔥 Chargement mis à jour:', data.name);
+          }
+        }
       });
       if(changed){
         try{ localStorage.setItem('clo_sessions',JSON.stringify(sessions)); }catch(e){}
-        // Only re-render sessions list, not the active session page
         var activePage=document.querySelector('.page.active');
         if(!activePage||activePage.id==='page-sessions') renderSessions();
+        updateArchiveBadges();
       }
-    },
-    function(err){ console.warn('Firestore offline ou erreur:',err); }
-  );
+    }, function(err){
+      console.error('❌ Firestore onSnapshot error:', err);
+    });
 });
 </script>
 </body>
