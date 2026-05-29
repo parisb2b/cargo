@@ -595,17 +595,11 @@ function saveAll(){
     localStorage.setItem('clo_sessions', JSON.stringify(sessions));
     localStorage.setItem('clo_session_trash', JSON.stringify(sessionTrash));
     localStorage.setItem('clo_colis_trash', JSON.stringify(colisTrash));
-    showSaveBadge();
     updateArchiveBadges();
   }catch(e){}
-  // Sync to Firestore (shared, no auth)
-  if(!window._firebaseReady||!window._fs) return;
-  const{doc,setDoc,serverTimestamp}=window._fs;
-  sessions.forEach(function(s){
-    setDoc(doc(window._db,'cargo_sessions',s.id),
-      Object.assign({},s,{updatedAt:serverTimestamp()})
-    ).catch(console.error);
-  });
+  // Sync Firestore différé (appelé par syncFirestore ou manualSave)
+  clearTimeout(saveAll._fsTimer);
+  saveAll._fsTimer = setTimeout(syncFirestore, 1500);
 }
 function loadAll(){
   try{ const d=localStorage.getItem('clo_sessions'); if(d)sessions=JSON.parse(d); }catch(e){ sessions=[]; }
@@ -639,6 +633,16 @@ function hideToastOverlay(){
   if(ov){ ov.style.opacity='0'; ov.style.pointerEvents='none'; }
 }
 
+function syncFirestore(){
+  if(!window._firebaseReady||!window._fs) return;
+  var fss=window._fs;
+  sessions.forEach(function(s){
+    fss.setDoc(fss.doc(window._db,'cargo_sessions',s.id),
+      Object.assign({},s,{updatedAt:fss.serverTimestamp()})
+    ).catch(console.error);
+  });
+}
+
 function showSaveBadge(){
   const b=document.getElementById('save-badge');
   if(b){ b.style.display='flex'; clearTimeout(b._t); b._t=setTimeout(()=>b.style.display='none',3000); }
@@ -646,7 +650,9 @@ function showSaveBadge(){
 
 function manualSave(){
   if(!currentSessionId) return;
-  saveAll();
+  // Sauvegarder localStorage + Firestore immédiatement
+  try{ localStorage.setItem('clo_sessions',JSON.stringify(sessions)); }catch(e){}
+  syncFirestore();
   // Visual feedback on button
   const btn=document.getElementById('btn-save-manual');
   if(!btn) return;
@@ -678,9 +684,14 @@ function showPage(p){
   document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
   document.getElementById('tab-'+p).classList.add('active');
-  if(p==='viz'){ setTimeout(()=>{ buildViz(); initDrag(); },50); }
+  if(p==='viz'){ setTimeout(function(){ buildViz(); initDrag(); },50); }
   if(p==='export'){ updateExportPage(); }
   if(p==='colis'){ computeSummary(); }
+  // Mémoriser la page active pour restore après refresh
+  try{ localStorage.setItem('clo_active_page', p); }catch(e){}
+  // Show save button
+  const saveBtn=document.getElementById('btn-save-manual');
+  if(saveBtn) saveBtn.style.display=(p!=='sessions'&&currentSessionId)?'inline-flex':'none';
 }
 
 /* ============================================================
@@ -1017,14 +1028,16 @@ function updateCell(el){
   const s=getSession(); if(!s) return;
   const i=+el.dataset.i, f=+el.dataset.f;
   s.colis[i][f]=el.value;
-  // update color index based on row order
   s.colis[i][0]=i;
-  // update vol cell
   const l=+s.colis[i][2],w=+s.colis[i][3],h=+s.colis[i][4];
   const vc=document.getElementById('vcell-'+i);
   if(vc) vc.textContent=l&&w&&h?(l*w*h/1000000).toFixed(4)+' m³':'';
-  saveAll();
+  // Sauvegarde locale immédiate (pas de badge, pas de Firestore)
+  try{ localStorage.setItem('clo_sessions',JSON.stringify(sessions)); }catch(e){}
   computeSummary();
+  // Sync Firestore différé — 1 seul appel après arrêt de frappe
+  clearTimeout(updateCell._t);
+  updateCell._t=setTimeout(function(){ syncFirestore(); },1000);
 }
 
 function duplicateRow(i){
@@ -2754,31 +2767,68 @@ function importExcel(){
   const s=getSession(); if(!s){ alert('Créez d\'abord un chargement.'); return; }
   const inp=document.createElement('input');
   inp.type='file'; inp.accept='.xlsx,.xls';
-  inp.onchange=e=>{
+  inp.onchange=function(e){
     const f=e.target.files[0]; if(!f) return;
     const r=new FileReader();
-    r.onload=ev=>{
-      const wb=XLSX.read(ev.target.result,{type:'binary'});
-      const ws=wb.Sheets[wb.SheetNames[0]];
-      const rows=XLSX.utils.sheet_to_json(ws);
-      // Purge empty rows before appending
-      s.colis=s.colis.filter(c=>+c[2]&&+c[3]&&+c[4]);
-      let added=0;
-      rows.forEach((row)=>{
-        const l=+row['L (cm)']||+row['Longueur(cm)']||0;
-        const w=+row['l (cm)']||+row['Largeur(cm)']||0;
-        const h=+row['H (cm)']||+row['Hauteur(cm)']||0;
-        if(!l||!w||!h) return;
-        const idx=s.colis.length;
-        s.colis.push([idx%COLORS.length, row['Référence']||row['Reference']||'', l,w,h,
-          +row['Quantité']||+row['Quantite']||1,
-          +row['Poids (kg)']||+row['Poids(kg)']||0,
-          row['Rotation']||'flat',
-          row['Fragilité']||row['Fragilite']||'normal']);
-        added++;
-      });
-      saveAll(); renderColisTable();
-      alert(added+' ligne(s) importée(s) avec succès.');
+    r.onload=function(ev){
+      try{
+        const wb=XLSX.read(ev.target.result,{type:'binary'});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+        if(!rows.length){ alert('Fichier vide ou format non reconnu.'); return; }
+
+        // Helper: find value by multiple possible column names
+        function col(row, keys){
+          for(const k of keys){
+            if(row[k]!==undefined&&row[k]!=='') return row[k];
+          }
+          return '';
+        }
+
+        // Purge empty rows before appending
+        s.colis=s.colis.filter(function(c){ return +c[2]&&+c[3]&&+c[4]; });
+        let added=0, skipped=0;
+
+        rows.forEach(function(row){
+          // Skip summary/header rows (TOTAL, Capacité, etc.)
+          const ref=String(col(row,['Référence','Reference','货物编号','ref','REF','Ref'])||'').trim();
+          if(!ref||ref==='TOTAL'||ref.includes('Capacité')||ref.includes('remplissage')||ref.includes('Conteneur')) return;
+
+          // Length — accept many column name variants
+          const l=+col(row,[
+            'L (cm)','Long. (cm)','Longueur (cm)','Longueur(cm)',
+            'L(cm)','长(cm)','长度(cm)','L','长','长度'
+          ])||0;
+          // Width
+          const w=+col(row,[
+            'l (cm)','Larg. (cm)','Largeur (cm)','Largeur(cm)',
+            'l(cm)','宽(cm)','宽度(cm)','W','宽','宽度'
+          ])||0;
+          // Height
+          const h=+col(row,[
+            'H (cm)','Haut. (cm)','Hauteur (cm)','Hauteur(cm)',
+            'H(cm)','高(cm)','高度(cm)','H','高','高度'
+          ])||0;
+
+          if(!l||!w||!h){ skipped++; return; }
+
+          const qty=+col(row,['Quantité','Quantite','数量','Qty','qty','QTY'])||1;
+          const poids=+col(row,['Poids (kg)','Poids/u (kg)','Poids(kg)','重量(kg)','重量','Poids','kg'])||0;
+          const rot=col(row,['Rotation','摆放方向','rotation'])||'free';
+          const frag=col(row,['Fragilité','Fragilite','易碎程度','fragilite'])||'normal';
+
+          const ci=s.colis.length;
+          s.colis.push([ci%COLORS.length, ref, l, w, h, qty, poids, rot, frag]);
+          added++;
+        });
+
+        saveAll(); renderColisTable();
+        const msg=added+' ligne(s) importée(s) avec succès.'+(skipped?' ('+skipped+' ligne(s) ignorée(s) — dimensions manquantes)':'');
+        alert(msg);
+      }catch(err){
+        alert('Erreur lors de la lecture du fichier : '+err.message);
+        console.error(err);
+      }
     };
     r.readAsBinaryString(f);
   };
@@ -3240,8 +3290,22 @@ function toggleLang(){
 }
 
 loadAll();
-renderSessions();
 applyLang();
+
+// Restore dernière session + page active après refresh
+(function restoreState(){
+  try{
+    const lastSid = localStorage.getItem('clo_active_session');
+    const lastPage = localStorage.getItem('clo_active_page') || 'sessions';
+    if(lastSid && sessions.find(function(s){ return s.id===lastSid; })){
+      currentSessionId = lastSid;
+      renderSessions();
+      showPage(lastPage);
+    } else {
+      renderSessions();
+    }
+  }catch(e){ renderSessions(); }
+})();
 // Keydown on modal input — safe after DOM ready
 document.getElementById('new-name').addEventListener('keydown',function(e){ if(e.key==='Enter') createSession(); });
 
@@ -3252,14 +3316,19 @@ window.addEventListener('firebase-ready', function(){
   fs.onSnapshot(
     fs.query(fs.collection(window._db,'cargo_sessions'),fs.orderBy('updatedAt','desc')),
     function(snap){
+      var changed=false;
       snap.forEach(function(d){
         var data=d.data();
         var idx=sessions.findIndex(function(s){ return s.id===data.id; });
-        if(idx===-1) sessions.push(data);
-        else sessions[idx]=data;
+        if(idx===-1){ sessions.push(data); changed=true; }
+        else if(sessions[idx].updatedAt!==data.updatedAt){ sessions[idx]=data; changed=true; }
       });
-      try{ localStorage.setItem('clo_sessions',JSON.stringify(sessions)); }catch(e){}
-      renderSessions();
+      if(changed){
+        try{ localStorage.setItem('clo_sessions',JSON.stringify(sessions)); }catch(e){}
+        // Only re-render sessions list, not the active session page
+        var activePage=document.querySelector('.page.active');
+        if(!activePage||activePage.id==='page-sessions') renderSessions();
+      }
     },
     function(err){ console.warn('Firestore offline ou erreur:',err); }
   );
