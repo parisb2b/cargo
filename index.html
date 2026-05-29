@@ -596,7 +596,7 @@ function saveAll(){
     showSaveBadge();
     updateArchiveBadges();
   }catch(e){}
-  // Sync Firestore différé (appelé par syncFirestore ou manualSave)
+  // Sync Firestore différé
   clearTimeout(saveAll._fsTimer);
   saveAll._fsTimer = setTimeout(syncFirestore, 800);
 }
@@ -733,7 +733,7 @@ function createSession(){
   document.getElementById('new-name').value='';
   closeModal();
   saveAll();
-  syncFirestore(); // Force Firestore sync immediate
+  syncFirestore(); // Force sync immédiat
   renderSessions();
   initContainerUI();
   initColisTable();
