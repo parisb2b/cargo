@@ -744,9 +744,12 @@ function createSession(){
   };
   sessions.push(session);
   currentSessionId=session.id;
+  try{ localStorage.setItem('clo_active_session', session.id); }catch(e){}
   document.getElementById('new-name').value='';
   closeModal();
-  saveAll();
+  // Sauvegarder localement + sync Firestore immédiat (pas de debounce)
+  try{ localStorage.setItem('clo_sessions', JSON.stringify(sessions)); }catch(e){}
+  syncFirestore();
   renderSessions();
   initContainerUI();
   initColisTable();
@@ -755,6 +758,7 @@ function createSession(){
 
 function loadSession(id){
   currentSessionId=id;
+  try{ localStorage.setItem('clo_active_session', id); }catch(e){}
   initContainerUI();
   initColisTable();
   renderSessions();
@@ -3365,7 +3369,9 @@ window.addEventListener('firebase-ready', function(){
       if(loaded > 0) {
         console.log('Firebase: ' + loaded + ' chargement(s) chargé(s) depuis Firestore');
         try{ localStorage.setItem('clo_sessions', JSON.stringify(sessions)); }catch(e){}
-        renderSessions();
+        // Ne pas écraser currentSessionId si déjà défini (session vient d'être créée)
+        if(!currentSessionId) renderSessions();
+        else renderSessions(); // refresh la liste sans changer de page
         updateArchiveBadges();
       } else {
         console.log('Firebase: aucun chargement dans Firestore');
@@ -3387,8 +3393,8 @@ window.addEventListener('firebase-ready', function(){
       });
       if(changed) {
         try{ localStorage.setItem('clo_sessions', JSON.stringify(sessions)); }catch(e){}
-        var ap = document.querySelector('.page.active');
-        if(!ap || ap.id === 'page-sessions') renderSessions();
+        // Refresh liste sessions seulement — ne jamais changer de page activement
+        renderSessions();
         updateArchiveBadges();
       }
     }, function(err){ console.error('Firebase onSnapshot error:', err.code, err.message); });
