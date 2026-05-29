@@ -1,0 +1,67 @@
+RAPPORT DE DÉPLOIEMENT — CONTAINER OPTIMIZER
+==============================================
+
+Date : 2026-05-24
+Projet : Container Load Optimizer (CARGO)
+Domaine cible : cargo.sasfr.com
+
+──────────────────────────────────────────────
+
+1. URL DE PRODUCTION VERCEL
+──────────────────────────────────────────────
+Production  : https://cargo-pied-kappa.vercel.app
+Dernier     : https://cargo-paeqox5y3-parisb2bs-projects.vercel.app
+Inspect     : https://vercel.com/parisb2bs-projects/cargo/5XGa3w93Hv4nP6T2KNnTVDWhQDp6
+
+2. DÉPÔT GITHUB
+──────────────────────────────────────────────
+URL         : https://github.com/parisb2b/cargo
+Visibilité  : Public
+Branche     : master
+Commit      : 62b4b9c — Ajout CLAUDE.md + RAPPEL-SAUVEGARDE.txt
+
+Fichiers de verrouillage :
+  - CLAUDE.md              : Guide d'architecture
+  - RAPPEL-SAUVEGARDE.txt  : État verrouillé au 24/05/2026
+
+3. STATUT DES TESTS (validé 2026-05-24)
+──────────────────────────────────────────────
+✅ Bouton Enregistrer : ACTIF — plus grisé ni disabled
+✅ test01 — 20GP Export Guadeloupe : 3 colis chargés (MP-R22-MiniPelle, ACCESSOIRE-PL-01, PALETTE-BOIS-EPAL)
+✅ test02 — 40HC Export Martinique : 3 colis chargés (GROUPE-ELEC-50KW, TUYAUTERIE-INOX, CAISSE-OUTILLAGE)
+✅ Navigation : onglet Liste des cargos avec sections En cours / Historique
+✅ Chargement de session : clic sur un cargo → colis affichés
+✅ Sauvegarde locale : localStorage fonctionnel en fallback
+⚠️  Firestore : règles publiques à configurer dans la console Firebase (allow read, write: if true;)
+
+4. ARCHITECTURE FIRESTORE
+──────────────────────────────────────────────
+Projet Firebase : cargo-optimizer-fca82
+Collection      : cargo_sessions
+Règles requises : allow read, write: if true;
+
+Structure d'un document cargo_sessions :
+  - id (string)           : Identifiant unique de session
+  - name (string)         : Nom du chargement
+  - created (string)      : Date de création (format FR)
+  - container (map)       : Dimensions {l, w, h, max, type}
+  - colis (array)         : Liste des colis
+  - updatedAt (timestamp) : Horodatage serveur Firestore
+
+5. CORRECTIFS APPLIQUÉS (v5)
+──────────────────────────────────────────────
+  - Renommage _db() → fsDb() et _fs() → fsUtils() pour éviter conflits
+  - Bouton Enregistrer : TOUJOURS ACTIF (disabled retiré)
+  - Message d'aide si clic sans session sélectionnée
+  - CSS #btn-save:disabled / :not(:disabled) pour retour visuel
+  - Injection automatique de test01 et test02 au chargement
+  - Tooltip contextuel sur le bouton Enregistrer
+
+6. FICHIERS DU PROJET
+──────────────────────────────────────────────
+  - index.html                   : Application principale
+  - container-optimizer OK.html  : Source originale (conservée)
+  - PROMPT-CARGO.md              : Spécifications du projet
+  - .gitignore                   : Exclusions Git
+  - vercel.json                  : Configuration de déploiement Vercel
+  - MAJ-CARGO.txt                : Ce rapport

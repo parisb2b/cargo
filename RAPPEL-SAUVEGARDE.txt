@@ -1,0 +1,19 @@
+=======================================================================
+FICHIER DE RAPPEL DE SAUVEGARDE CONSOLIDÉE - PROJET CARGO
+=======================================================================
+DATE DE VERROUILLAGE : 24 Mai 2026
+STATUT PRODUCTION    : OPÉRATIONNEL (https://cargo-pied-kappa.vercel.app)
+CHEMIN LOCAL         : C:\DATA-MC-2030\CARGO\
+
+DIRECTIVES ABSOLUES POUR CLAUDE CODE AU REDÉMARRAGE :
+1. NE PAS MODIFIER NI RELANCER LA PRODUCTION DU CODE SOURCE. L'interface
+   actuelle, le bouton "Enregistrer" et la "Liste des cargos" fonctionnent
+   parfaitement en ligne.
+2. S'assurer simplement que le fichier 'index.html' local dans
+   'C:\DATA-MC-2030\CARGO\' est le reflet exact de la version publiée sur Vercel.
+3. Injecter et tester localement uniquement les deux cargos de test
+   ('test01' et 'test02') pour valider que la communication Firestore
+   publique est bien active en tâche de fond.
+4. Une fois la synchronisation locale validée, exécuter le plugin '/goal'
+   pour clore la session proprement.
+=======================================================================
