@@ -3320,38 +3320,54 @@ document.getElementById('new-name').addEventListener('keydown',function(e){ if(e
 // Firestore real-time sync — starts when Firebase SDK is ready
 window.addEventListener('firebase-ready', function(){
   if(!window._db) return;
-  var db=window._db;
-  console.log('🔥 Démarrage sync Firestore...');
+  var db = window._db;
+  console.log('Firebase: connexion Firestore...');
+
+  // CHARGEMENT INITIAL: get() immédiat pour charger depuis Firestore
+  // (indispensable pour multi-navigateurs - onSnapshot seul ne suffit pas au démarrage)
   db.collection('cargo_sessions')
-    .orderBy('updatedAt','desc')
-    .onSnapshot(function(snap){
-      var changed=false;
-      snap.forEach(function(d){
-        var data=d.data();
-        if(!data||!data.id) return;
-        var idx=sessions.findIndex(function(s){ return s.id===data.id; });
-        if(idx===-1){
-          sessions.push(data); changed=true;
-          console.log('🔥 Nouveau chargement reçu:', data.name);
-        } else {
-          var localTs=sessions[idx].syncedAt||'';
-          var remoteTs=data.syncedAt||'';
-          if(localTs!==remoteTs){
-            sessions[idx]=data; changed=true;
-            console.log('🔥 Chargement mis à jour:', data.name);
-          }
-        }
+    .orderBy('updatedAt', 'desc')
+    .get()
+    .then(function(snap) {
+      var loaded = 0;
+      snap.forEach(function(d) {
+        var data = d.data();
+        if(!data || !data.id) return;
+        var idx = sessions.findIndex(function(s){ return s.id === data.id; });
+        if(idx === -1){ sessions.push(data); loaded++; }
+        else { sessions[idx] = data; loaded++; }
       });
-      if(changed){
-        try{ localStorage.setItem('clo_sessions',JSON.stringify(sessions)); }catch(e){}
-        var activePage=document.querySelector('.page.active');
-        if(!activePage||activePage.id==='page-sessions') renderSessions();
+      if(loaded > 0) {
+        console.log('Firebase: ' + loaded + ' chargement(s) chargé(s) depuis Firestore');
+        try{ localStorage.setItem('clo_sessions', JSON.stringify(sessions)); }catch(e){}
+        renderSessions();
+        updateArchiveBadges();
+      } else {
+        console.log('Firebase: aucun chargement dans Firestore');
+      }
+    })
+    .catch(function(err){ console.error('Firebase get() error:', err.code, err.message); });
+
+  // TEMPS RÉEL: onSnapshot pour recevoir les mises à jour des autres navigateurs
+  db.collection('cargo_sessions')
+    .orderBy('updatedAt', 'desc')
+    .onSnapshot(function(snap) {
+      var changed = false;
+      snap.forEach(function(d) {
+        var data = d.data();
+        if(!data || !data.id) return;
+        var idx = sessions.findIndex(function(s){ return s.id === data.id; });
+        if(idx === -1){ sessions.push(data); changed = true; }
+        else if(sessions[idx].syncedAt !== data.syncedAt){ sessions[idx] = data; changed = true; }
+      });
+      if(changed) {
+        try{ localStorage.setItem('clo_sessions', JSON.stringify(sessions)); }catch(e){}
+        var ap = document.querySelector('.page.active');
+        if(!ap || ap.id === 'page-sessions') renderSessions();
         updateArchiveBadges();
       }
-    }, function(err){
-      console.error('❌ Firestore onSnapshot error:', err);
-    });
-});
+    }, function(err){ console.error('Firebase onSnapshot error:', err.code, err.message); });
+}););
 </script>
 </body>
 </html>
