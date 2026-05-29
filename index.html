@@ -864,6 +864,7 @@ function renderSessions(){
   }
   el.innerHTML='';
   [...sessions].reverse().forEach(s=>{
+    if(!s.container||!s.container.l) return;
     const cVol=(s.container.l*s.container.w*s.container.h)/1000000;
     const usedVol=s.colis.reduce((sum,c)=>{
       const n=c.filter(x=>x).length>0?c:null;
@@ -3319,6 +3320,7 @@ window.addEventListener('firebase-ready', function(){
       var changed=false;
       snap.forEach(function(d){
         var data=d.data();
+        if(!data||!data.container) return; // skip invalid/incomplete docs
         var idx=sessions.findIndex(function(s){ return s.id===data.id; });
         if(idx===-1){ sessions.push(data); changed=true; }
         else if(sessions[idx].updatedAt!==data.updatedAt){ sessions[idx]=data; changed=true; }
