@@ -1,75 +1,44 @@
 ===================================================================
-MAJ-CARGO.txt — Container Optimizer — Déploiement 29 Mai 2026
+MAJ-CARGO.txt — Container Optimizer — Fix No-Auth 29 Mai 2026
 ===================================================================
 
 URL Vercel (Production):
-  https://cargo-kecm00z04-parisb2bs-projects.vercel.app
+  https://cargo-lnj5xa27n-parisb2bs-projects.vercel.app
 
 Domaine (alias Vercel):
   https://cargo.sasfr.com (⚠ DNS IONOS à configurer)
 
+===================================================================
+RÉSULTAT SUPPRESSION AUTH GOOGLE
+===================================================================
+
+Fix auth supprimé   : OUI ✅
+auth-wall count     : 0 ✅
+doSignIn count      : 0 ✅
+Firestore actif     : OUI ✅ (cargo_sessions: 3 refs)
+Page sans login     : OUI ✅ (accès direct, aucun écran de connexion)
+Erreurs console     : 0 ✅
+
+===================================================================
+CONFIGURATION
+===================================================================
+
 Firebase:
   Project ID : cargo-optimizer-fca82
-  Auth       : Google Sign-In (configuré)
-  Firestore  : Collection cargo_sessions/{uid}_{id}
-  Règles     : firestore.rules (⚠ à déployer manuellement)
+  Firestore  : cargo_sessions (sync sans auth, règles publiques)
+  Auth       : AUCUN (supprimé)
 
-GitHub:
-  Repo    : parisb2b/cargo (PUBLIC)
-  Branche : main
-  Commit  : 861490c
-
-===================================================================
-ÉTAT DU DÉPLOIEMENT
-===================================================================
-
-✅ Étape 1 — Git + GitHub
-   - Repo: parisb2b/cargo, branche: main
-   - vercel.json: @vercel/static
-
-✅ Étape 2 — Firebase Auth + Firestore
-   - SDK Firebase module: Auth + Firestore + GoogleAuthProvider
-   - Auth section dans nav-right (avatar, nom, logout)
-   - Auth-wall overlay (écran connexion bleu)
-   - saveAll() avec sync Firestore par ownerId
-   - loadAll() avec fallback localStorage
-   - Fonctions: doSignIn(), doSignOut(), getUserId(), startFirestoreSync()
-   - deleteSession() avec deleteDoc Firestore
-   - INIT avec firebase-ready + onAuthStateChanged + timeout 3s fallback
-   - 🔧 Bug corrigé: backtick échappé dans renderColisTable()
-
-⚠ Étape 3 — Règles Firestore
-   - firestore.rules créé → à déployer via Console Firebase
-
-✅ Étape 4 — Déploiement Vercel
-   - Production: cargo-kecm00z04-parisb2bs-projects.vercel.app
-   - SSO Protection: désactivée
-   - Build: 154.8 KB uploadé
-
-⚠ Étape 5 — Domaine cargo.sasfr.com
-   - Alias Vercel configuré
-   - ⚠ DNS IONOS: A cargo.sasfr.com → 76.76.21.21
-   - ⚠ Firebase Auth: ajouter cargo.sasfr.com aux domaines autorisés
-
-✅ Étape 6 — Vérifications
-   1. ✅ Auth-wall overlay bleu avec bouton Google
-   2. ⚠ Connexion Google (domaine Firebase Auth à configurer)
-   3. ✅ Créer chargement → modal fonctionnel
-   4. ✅ Sélection conteneur (20/40 GP, 40 HC, Personnalisé)
-   5. ✅ Table colis + ⧉ dupliquer + × supprimer
-   6. ✅ Stats m³, %, kg, colis
-   7. ✅ Navigation onglets 1-4
-   8. ✅ Sauvegarde automatique
-   9. ✅ Toggle FR/中文
-   10. ✅ Boutons Import/Export Excel
-   11. ✅ 0 erreur JavaScript console
-   12. ✅ Bug backtick corrigé + JS validé node --check
+Architecture:
+  cargo.sasfr.com
+  ├── Vercel (static)
+  │   └── index.html (Firestore seul, pas d'auth)
+  ├── Firebase cargo-optimizer-fca82
+  │   └── Firestore: collection cargo_sessions
+  └── GitHub parisb2b/cargo (main)
 
 ===================================================================
-ACTIONS RESTANTES
+COMMIT
 ===================================================================
 
-1. [ ] Déployer firestore.rules (Console Firebase > Firestore)
-2. [ ] DNS IONOS: A cargo.sasfr.com → 76.76.21.21
-3. [ ] Firebase Auth: Ajouter cargo.sasfr.com aux domaines autorisés
-4. [ ] Tester connexion Google avec domaine cargo.sasfr.com
+fix: supprimer auth Google définitivement - Firestore seul
+c352cc7 — 29 Mai 2026
