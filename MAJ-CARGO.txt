@@ -1,44 +1,21 @@
 ===================================================================
-MAJ-CARGO.txt — Container Optimizer — Fix No-Auth 29 Mai 2026
+MAJ-CARGO.txt — Container Optimizer — 29 Mai 2026
 ===================================================================
 
-URL Vercel (Production):
-  https://cargo-lnj5xa27n-parisb2bs-projects.vercel.app
+URL : https://cargo-l5swvcg6m-parisb2bs-projects.vercel.app
+Domaine : cargo.sasfr.com (aliasé, DNS IONOS à configurer)
 
-Domaine (alias Vercel):
-  https://cargo.sasfr.com (⚠ DNS IONOS à configurer)
+index.html modifié : NON
+Checks passés : OUI
 
-===================================================================
-RÉSULTAT SUPPRESSION AUTH GOOGLE
-===================================================================
+firebase-app-compat.js : 1 ✅
+sanitizeForFirestore  : 2 ✅
+auth-wall             : 0 ✅
+activeVizMode 3d      : 1 ✅
+Backtick échappés     : 0 ✅
+Braces                : 603/603 ✅
+Erreurs console       : 0 ✅
 
-Fix auth supprimé   : OUI ✅
-auth-wall count     : 0 ✅
-doSignIn count      : 0 ✅
-Firestore actif     : OUI ✅ (cargo_sessions: 3 refs)
-Page sans login     : OUI ✅ (accès direct, aucun écran de connexion)
-Erreurs console     : 0 ✅
-
-===================================================================
-CONFIGURATION
-===================================================================
-
-Firebase:
-  Project ID : cargo-optimizer-fca82
-  Firestore  : cargo_sessions (sync sans auth, règles publiques)
-  Auth       : AUCUN (supprimé)
-
-Architecture:
-  cargo.sasfr.com
-  ├── Vercel (static)
-  │   └── index.html (Firestore seul, pas d'auth)
-  ├── Firebase cargo-optimizer-fca82
-  │   └── Firestore: collection cargo_sessions
-  └── GitHub parisb2b/cargo (main)
-
-===================================================================
-COMMIT
-===================================================================
-
-fix: supprimer auth Google définitivement - Firestore seul
-c352cc7 — 29 Mai 2026
+Firebase : cargo-optimizer-fca82 (Firestore, sans Auth)
+GitHub   : parisb2b/cargo (main)
+Commit   : 2739f86
