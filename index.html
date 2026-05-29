@@ -43,6 +43,13 @@
   @keyframes savePulse { 0%{transform:scale(1)} 50%{transform:scale(1.07)} 100%{transform:scale(1)} }
   #btn-save-manual.pulse { animation: savePulse .2s ease; }
   #btn-save-manual.saved { background:var(--green-bg,#f0fdf4); border-color:var(--green-border,#bbf7d0); color:var(--green,#15803d); }
+  .layer-btn { padding:3px 8px!important; transition:all .12s; font-weight:600; }
+  .layer-btn.active { background:var(--accent)!important; color:#fff!important; border-color:var(--accent)!important; box-shadow:0 0 0 2px rgba(26,86,219,.25); }
+  #layer-btn-0.active { background:#22c55e!important; border-color:#22c55e!important; }
+  #layer-btn-1.active { background:#f59e0b!important; border-color:#f59e0b!important; }
+  #layer-btn-2.active { background:#ef4444!important; border-color:#ef4444!important; }
+  #layer-btn-left.active { background:#8b5cf6!important; border-color:#8b5cf6!important; }
+  #layer-btn-right.active { background:#8b5cf6!important; border-color:#8b5cf6!important; }
   .save-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
 
   /* LAYOUT */
@@ -174,37 +181,6 @@
   svg.icon { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- Firebase SDK -->
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import {
-    getAuth, signInWithPopup, signOut, onAuthStateChanged,
-    GoogleAuthProvider
-  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import {
-    getFirestore, collection, doc, setDoc, deleteDoc, getDoc,
-    onSnapshot, query, where, orderBy, serverTimestamp
-  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-  const app = initializeApp({
-    apiKey: "AIzaSyDyk2XwTDY2tjbnUsVRI-hg3jptd9sNe2Y",
-    authDomain: "cargo-optimizer-fca82.firebaseapp.com",
-    projectId: "cargo-optimizer-fca82",
-    storageBucket: "cargo-optimizer-fca82.firebasestorage.app",
-    messagingSenderId: "89903431919",
-    appId: "1:89903431919:web:52c9e432d3f4839b03db1a"
-  });
-
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
-
-  window._firebase = { auth, db, provider, signInWithPopup, signOut,
-    onAuthStateChanged, GoogleAuthProvider, collection, doc, setDoc,
-    deleteDoc, getDoc, onSnapshot, query, where, orderBy, serverTimestamp };
-
-  window.dispatchEvent(new Event('firebase-ready'));
-</script>
 </head>
 <body>
 
@@ -232,36 +208,8 @@
       <span id="save-badge-lbl">Sauvegardé</span>
     </div>
     <button class="btn btn-sm btn-primary btn-new-charge" onclick="openNewModal()">+ Nouveau chargement</button>
-    <!-- Auth section -->
-    <div id="auth-section" style="display:flex;align-items:center;gap:8px;margin-left:8px;padding-left:8px;border-left:1px solid var(--border)">
-      <div id="auth-user" style="display:none;align-items:center;gap:8px">
-        <img id="auth-avatar" style="width:28px;height:28px;border-radius:50%;object-fit:cover" src="" alt="">
-        <span id="auth-name" style="font-size:12px;font-weight:500;color:var(--text);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-        <button class="btn btn-sm btn-ghost" onclick="doSignOut()" id="btn-signout">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        </button>
-      </div>
-      <button id="btn-signin" class="btn btn-sm btn-primary" onclick="doSignIn()" style="display:none">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
-        <span id="signin-lbl">Connexion Google</span>
-      </button>
-    </div>
   </div>
 </nav>
-
-<!-- AUTH WALL — shown when not logged in -->
-<div id="auth-wall" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);z-index:500;align-items:center;justify-content:center;flex-direction:column">
-  <div style="text-align:center;color:#fff;max-width:360px;padding:40px">
-    <div style="font-size:48px;margin-bottom:16px">📦</div>
-    <h1 style="font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px">Container<span style="color:#60a5fa">Optimizer</span></h1>
-    <p style="font-size:14px;color:rgba(255,255,255,.6);margin-bottom:32px;line-height:1.6">Optimiseur de remplissage de conteneurs maritimes 3D.<br>Connectez-vous pour accéder à vos chargements.</p>
-    <button onclick="doSignIn()" style="display:inline-flex;align-items:center;gap:10px;background:#fff;color:#1a1a18;padding:12px 24px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.3);transition:transform .1s" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-      Connexion avec Google
-    </button>
-    <p style="margin-top:20px;font-size:11px;color:rgba(255,255,255,.3)">Vos données sont privées et sécurisées.</p>
-  </div>
-</div>
 
 <!-- PAGE: SESSIONS -->
 <div class="page active" id="page-sessions">
@@ -441,6 +389,22 @@
           <button class="btn btn-sm" onclick="stepNext()">›</button>
           <button class="btn btn-sm btn-primary" onclick="stepPlay()" id="step-play-btn">▶</button>
         </div>
+        <!-- Layer filter (shown in 3D mode) -->
+        <div id="layer-filter-wrap" style="display:none;align-items:center;gap:4px">
+          <span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px" id="lbl-layers">Couches</span>
+          <button class="btn btn-sm layer-btn active" id="layer-btn-all" onclick="setLayerFilter('all')" title="Toutes les couches (cliquer pour tout afficher)">⬛ All</button>
+          <button class="btn btn-sm layer-btn" id="layer-btn-0" onclick="setLayerFilter(0)" title="Couche 1 — Sol (cliquer pour activer/désactiver)">
+            <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="7" width="10" height="4" fill="currentColor" rx="1"/></svg>
+          </button>
+          <button class="btn btn-sm layer-btn" id="layer-btn-1" onclick="setLayerFilter(1)" title="Couche 2 (cliquer pour activer/désactiver)">
+            <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="4" width="10" height="3" fill="currentColor" rx="1"/><rect x="1" y="8" width="10" height="3" fill="currentColor" opacity=".3" rx="1"/></svg>
+          </button>
+          <button class="btn btn-sm layer-btn" id="layer-btn-2" onclick="setLayerFilter(2)" title="Couche 3 — Sommet (cliquer pour activer/désactiver)">
+            <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="3" fill="currentColor" rx="1"/><rect x="1" y="5" width="10" height="3" fill="currentColor" opacity=".3" rx="1"/><rect x="1" y="9" width="10" height="2" fill="currentColor" opacity=".15" rx="1"/></svg>
+          </button>
+          <button class="btn btn-sm layer-btn" id="layer-btn-left" onclick="setLayerFilter('left')" title="Côté gauche">◧ G</button>
+          <button class="btn btn-sm layer-btn" id="layer-btn-right" onclick="setLayerFilter('right')" title="Côté droit">◨ D</button>
+        </div>
         <!-- Color mode -->
         <select id="color-mode-sel" class="field-select" onchange="changeColorMode(this.value)" style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);cursor:pointer">
           <option value="ref">Couleur par référence</option>
@@ -526,9 +490,45 @@
         <span id='btn-export-png3d-lbl'>Télécharger vue 3D (PNG)</span>
       </button>
     </div>
+    <!-- PLAN DE CHARGEMENT -->
+    <hr style="margin:16px 0">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:10px" id="lbl-loading-plan-title">Plan de chargement imprimable</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px" id="lbl-loading-plan-desc">Tableau Excel avec position de chaque colis dans le conteneur — prêt à imprimer pour l'équipe de chargement.</div>
+    <button class="btn" style="justify-content:flex-start;background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent)" onclick="exportLoadingPlan()">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span id="btn-loading-plan-lbl">📋 Télécharger le plan de chargement (.xlsx)</span>
+    </button>
     <div style="text-align:center;margin-top:12px">
       <button class="btn" onclick="showPage('sessions')"><span id="btn-new-load-lbl">↺ Nouveau chargement</span></button>
     </div>
+  </div>
+</div>
+
+<!-- PAGE ARCHIVE SESSIONS -->
+<div class="page" id="page-archive-sessions">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title" id="arch-sess-title">Chargements supprimés</div>
+        <div class="card-subtitle" id="arch-sess-sub">Conservés 30 jours · Cliquez pour restaurer</div>
+      </div>
+      <button class="btn btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="purgeSessionTrash()" id="btn-purge-sess">Vider</button>
+    </div>
+    <div id="archive-sessions-list" style="padding:8px 0"></div>
+  </div>
+</div>
+
+<!-- PAGE ARCHIVE COLIS -->
+<div class="page" id="page-archive-colis">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title" id="arch-colis-title">Colis supprimés</div>
+        <div class="card-subtitle" id="arch-colis-sub">Conservés 30 jours · Cliquez pour restaurer</div>
+      </div>
+      <button class="btn btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="purgeColisTrash()" id="btn-purge-colis">Vider</button>
+    </div>
+    <div id="archive-colis-list" style="padding:8px 0"></div>
   </div>
 </div>
 
@@ -555,30 +555,60 @@
 const COLORS = ['#1a56db','#e3500a','#16803c','#7c3aed','#b91c1c','#0e7490','#b45309','#4338ca','#15803d','#9d174d'];
 let sessions = [];
 let currentSessionId = null;
-let _currentUser = null;
-let _firestoreUnsub = null;
-let activeVizMode = 'side';
+let sessionTrash = [];   // deleted sessions {session, deletedAt}
+let colisTrash = {};     // deleted colis rows {sessionId: [{colis, idx, deletedAt}]}
+const TRASH_DAYS = 30;
+let activeVizMode = '3d';
 let lang = 'fr'; // 'fr' or 'zh'
 
 function getSession(){ return sessions.find(s=>s.id===currentSessionId)||null; }
 
 function saveAll(){
-  try{ localStorage.setItem('cargo_sessions_backup', JSON.stringify({sessions, activeSession})); showSaveBadge(); }catch(e){}
-  const uid = getUserId();
-  if(!uid || !window._firebase) return;
-  const { db, doc, setDoc, serverTimestamp } = window._firebase;
-  sessions.forEach(function(s){
-    setDoc(doc(db, 'cargo_sessions', uid+'_'+s.id), {
-      ...s, ownerId: uid, updatedAt: serverTimestamp()
-    }).catch(console.error);
+  const cut=Date.now()-TRASH_DAYS*86400000;
+  sessionTrash=sessionTrash.filter(x=>x.deletedAt>cut);
+  Object.keys(colisTrash).forEach(k=>{
+    colisTrash[k]=(colisTrash[k]||[]).filter(x=>x.deletedAt>cut);
   });
+  try{
+    localStorage.setItem('clo_sessions', JSON.stringify(sessions));
+    localStorage.setItem('clo_session_trash', JSON.stringify(sessionTrash));
+    localStorage.setItem('clo_colis_trash', JSON.stringify(colisTrash));
+    showSaveBadge();
+    updateArchiveBadges();
+  }catch(e){}
 }
 function loadAll(){
-  try{
-    const d = localStorage.getItem('cargo_sessions_backup');
-    if(d){ const p=JSON.parse(d); sessions=p.sessions||[]; activeSession=p.activeSession||null; }
-  }catch(e){ sessions=[]; activeSession=null; }
+  try{ const d=localStorage.getItem('clo_sessions'); if(d)sessions=JSON.parse(d); }catch(e){ sessions=[]; }
+  try{ const d=localStorage.getItem('clo_session_trash'); if(d)sessionTrash=JSON.parse(d); }catch(e){ sessionTrash=[]; }
+  try{ const d=localStorage.getItem('clo_colis_trash'); if(d)colisTrash=JSON.parse(d); }catch(e){ colisTrash={}; }
 }
+function showToastUndo(msg, undoFn){
+  const el=document.getElementById('save-badge');
+  if(!el) return;
+  // Reuse save-badge area as a simple toast or create a toast overlay
+  if(!document.getElementById('_toast-overlay')){
+    const t=document.createElement('div');
+    t.id='_toast-overlay';
+    t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a18;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:12px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);opacity:0;transition:opacity .2s;pointer-events:none';
+    document.body.appendChild(t);
+  }
+  const ov=document.getElementById('_toast-overlay');
+  ov.innerHTML='<span>'+msg+'</span>'+(undoFn?'<button onclick="_toastUndo()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">'+t('undo_btn')+'</button>':'');
+  ov.style.opacity='1'; ov.style.pointerEvents='auto';
+  window._toastUndo=function(){ if(undoFn){ undoFn(); hideToastOverlay(); } };
+  clearTimeout(window._toastTimer);
+  window._toastTimer=setTimeout(hideToastOverlay,5000);
+}
+function showToastInfo(msg){
+  showToastUndo(msg, null);
+  const ov=document.getElementById('_toast-overlay');
+  if(ov) ov.style.background='#15803d';
+}
+function hideToastOverlay(){
+  const ov=document.getElementById('_toast-overlay');
+  if(ov){ ov.style.opacity='0'; ov.style.pointerEvents='none'; }
+}
+
 function showSaveBadge(){
   const b=document.getElementById('save-badge');
   if(b){ b.style.display='flex'; clearTimeout(b._t); b._t=setTimeout(()=>b.style.display='none',3000); }
@@ -662,52 +692,122 @@ function loadSession(id){
 }
 
 function deleteSession(id, e){
-  if(e) e.stopPropagation();
-  if(!confirm(t('confirm_delete_session'))) return;
-  sessions = sessions.filter(function(s){ return s.id!==id; });
+  e.stopPropagation();
+  const s=sessions.find(x=>x.id===id); if(!s) return;
+  sessionTrash.push({session:JSON.parse(JSON.stringify(s)), deletedAt:Date.now()});
+  sessions=sessions.filter(x=>x.id!==id);
   if(currentSessionId===id) currentSessionId=null;
-  const uid = getUserId();
-  if(uid && window._firebase){
-    const { db, doc, deleteDoc } = window._firebase;
-    deleteDoc(doc(db,'cargo_sessions', uid+'_'+id)).catch(console.error);
-  }
   saveAll(); renderSessions();
-}
-
-function getUserId(){
-  return _currentUser ? _currentUser.uid : null;
-}
-
-function startFirestoreSync(){
-  const uid = getUserId();
-  if(!uid || !window._firebase) return;
-  if(_firestoreUnsub) _firestoreUnsub();
-  const { db, collection, query, where, orderBy, onSnapshot } = window._firebase;
-  _firestoreUnsub = onSnapshot(
-    query(collection(db,'cargo_sessions'), where('ownerId','==',uid), orderBy('updatedAt','desc')),
-    function(snap){
-      sessions = [];
-      snap.forEach(function(d){ sessions.push(d.data()); });
-      try{ localStorage.setItem('cargo_sessions_backup', JSON.stringify({sessions, activeSession})); }catch(e){}
-      if(!window._firebaseReady) return;
-      renderSessions();
-    },
-    function(err){ console.error('Firestore sync error:', err); }
+  showToastUndo(
+    t('session_deleted'),
+    function(){
+      const ti=sessionTrash.findIndex(x=>x.session.id===id);
+      if(ti!==-1){
+        sessions.push(sessionTrash[ti].session);
+        sessionTrash.splice(ti,1);
+        saveAll(); renderSessions();
+        showToastInfo(t('session_restored'));
+      }
+    }
   );
 }
 
-function doSignIn(){
-  const { auth, signInWithPopup, provider } = window._firebase;
-  signInWithPopup(auth, provider).catch(console.error);
+function showArchiveSessions(){
+  showPage('archive-sessions');
+  renderArchiveSessions();
+}
+function showArchiveColis(){
+  showPage('archive-colis');
+  renderArchiveColis();
 }
 
-function doSignOut(){
-  if(_firestoreUnsub){ _firestoreUnsub(); _firestoreUnsub=null; }
-  const { auth, signOut } = window._firebase;
-  signOut(auth).then(function(){
-    sessions=[]; activeSession=null;
-    renderSessions();
+function renderArchiveSessions(){
+  const el=document.getElementById('archive-sessions-list'); if(!el) return;
+  el.innerHTML='';
+  const cut=Date.now()-TRASH_DAYS*86400000;
+  const alive=sessionTrash.filter(x=>x.deletedAt>cut).sort((a,b)=>b.deletedAt-a.deletedAt);
+  if(!alive.length){
+    el.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-faint)">'+t('arch_empty')+'</div>';
+    return;
+  }
+  alive.forEach(item=>{
+    const s=item.session;
+    const daysLeft=Math.ceil((item.deletedAt+TRASH_DAYS*86400000-Date.now())/86400000);
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)';
+    const info=document.createElement('div'); info.style.flex='1';
+    info.innerHTML='<div style="font-weight:600;font-size:14px">'+s.name+'</div>'
+      +'<div style="font-size:11px;color:var(--text-muted)">'+(s.colis||[]).length+' colis · '
+      +t('arch_days_left').replace('{n}',daysLeft)+'</div>';
+    const btnR=document.createElement('button'); btnR.className='btn btn-sm btn-primary'; btnR.textContent=t('arch_restore');
+    btnR.addEventListener('click',function(){
+      const ti=sessionTrash.findIndex(x=>x.session.id===s.id);
+      if(ti!==-1){ sessions.push(sessionTrash[ti].session); sessionTrash.splice(ti,1); saveAll(); renderArchiveSessions(); renderSessions(); showToastInfo(t('session_restored')); }
+    });
+    const btnD=document.createElement('button'); btnD.className='btn btn-sm'; btnD.style.cssText='color:var(--danger,#b91c1c)'; btnD.textContent=t('arch_delete');
+    btnD.addEventListener('click',function(){
+      sessionTrash=sessionTrash.filter(x=>x.session.id!==s.id); saveAll(); renderArchiveSessions();
+    });
+    row.appendChild(info); row.appendChild(btnR); row.appendChild(btnD);
+    el.appendChild(row);
   });
+  // Update badge
+  const badge=document.getElementById('badge-arch-sess');
+  if(badge){ badge.textContent=alive.length; badge.style.display=alive.length?'block':'none'; }
+}
+
+function renderArchiveColis(){
+  const el=document.getElementById('archive-colis-list'); if(!el) return;
+  el.innerHTML='';
+  const cut=Date.now()-TRASH_DAYS*86400000;
+  let total=0;
+  Object.entries(colisTrash).forEach(([sid,items])=>{
+    const s=sessions.find(x=>x.id===sid);
+    const alive=items.filter(x=>x.deletedAt>cut);
+    if(!alive.length) return;
+    total+=alive.length;
+    const grp=document.createElement('div');
+    grp.innerHTML='<div style="padding:8px 16px;background:var(--bg);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)">'+(s?s.name:'?')+'</div>';
+    alive.forEach((item,ii)=>{
+      const c=item.colis;
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border)';
+      const info=document.createElement('div'); info.style.flex='1';
+      const ref=c[1]||'—', dims=(+c[2]||0)+'×'+(+c[3]||0)+'×'+(+c[4]||0)+' cm';
+      info.innerHTML='<div style="font-weight:600;font-size:13px">'+ref+'</div>'
+        +'<div style="font-size:11px;color:var(--text-muted)">'+dims+' · qty '+(+c[5]||1)+'</div>';
+      const btnR=document.createElement('button'); btnR.className='btn btn-sm btn-primary'; btnR.textContent=t('arch_restore');
+      (function(sid2,item2){
+        btnR.addEventListener('click',function(){
+          const s2=sessions.find(x=>x.id===sid2); if(!s2) return;
+          s2.colis.splice(item2.idx,0,item2.colis);
+          colisTrash[sid2]=colisTrash[sid2].filter(x=>x!==item2);
+          saveAll(); renderArchiveColis(); if(currentSessionId===sid2) renderColisTable();
+          showToastInfo(t('colis_restored'));
+        });
+      })(sid,item);
+      row.appendChild(info); row.appendChild(btnR);
+      grp.appendChild(row);
+    });
+    el.appendChild(grp);
+  });
+  if(!total) el.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-faint)">'+t('arch_empty')+'</div>';
+  const badge=document.getElementById('badge-arch-colis');
+  if(badge){ badge.textContent=total; badge.style.display=total?'block':'none'; }
+}
+
+function purgeSessionTrash(){ sessionTrash=[]; saveAll(); renderArchiveSessions(); }
+function purgeColisTrash(){ colisTrash={}; saveAll(); renderArchiveColis(); }
+
+function updateArchiveBadges(){
+  const cut=Date.now()-TRASH_DAYS*86400000;
+  const sc=sessionTrash.filter(x=>x.deletedAt>cut).length;
+  const bs=document.getElementById('badge-arch-sess');
+  if(bs){ bs.textContent=sc; bs.style.display=sc?'block':'none'; }
+  let cc=0;
+  Object.values(colisTrash).forEach(a=>{ cc+=a.filter(x=>x.deletedAt>cut).length; });
+  const bc=document.getElementById('badge-arch-colis');
+  if(bc){ bc.textContent=cc; bc.style.display=cc?'block':'none'; }
 }
 
 function renderSessions(){
@@ -863,7 +963,10 @@ function renderColisTable(){
       </select></td>
       <td class="vol-cell" id="vcell-${i}">${u?u+' m³':''}</td>
       <td style="padding:0 8px">${statusHtml}</td>
-      <td class="del-cell"><button class="del-btn" onclick="deleteRow(${i})" title="Supprimer">×</button></td>`;
+      <td class="del-cell" style="display:flex;gap:3px;align-items:center">
+        <button class="del-btn" style="color:var(--accent);border-color:var(--accent-border);background:var(--accent-bg)" onclick="duplicateRow(${i})" title="${t('dup_tooltip')}">⧉</button>
+        <button class="del-btn" onclick="deleteRow(${i})" title="${t('del_tooltip')}">×</button>
+      </td>\`;
     tbody.appendChild(tr);
   });
   computeSummary();
@@ -889,11 +992,38 @@ function updateCell(el){
   computeSummary();
 }
 
+function duplicateRow(i){
+  const s=getSession(); if(!s) return;
+  const orig=s.colis[i];
+  const copy=[...orig]; // shallow copy of row array
+  // Give new unique id if needed
+  s.colis.splice(i+1,0,copy);
+  saveAll(); renderColisTable();
+  showToastInfo(t('colis_duped'));
+}
+
 function deleteRow(i){
   const s=getSession(); if(!s) return;
-  s.colis.splice(i,1);
-  saveAll();
-  renderColisTable();
+  const removed=s.colis.splice(i,1)[0];
+  // Move to colis trash
+  if(!colisTrash[s.id]) colisTrash[s.id]=[];
+  colisTrash[s.id].push({colis:removed, idx:i, deletedAt:Date.now()});
+  saveAll(); renderColisTable();
+  // Undo toast
+  showToastUndo(
+    t('colis_deleted'),
+    function(){
+      const s2=getSession(); if(!s2) return;
+      if(!colisTrash[s2.id]) return;
+      const ti=colisTrash[s2.id].findIndex(x=>x.colis===removed&&x.idx===i);
+      if(ti!==-1){
+        s2.colis.splice(colisTrash[s2.id][ti].idx,0,colisTrash[s2.id][ti].colis);
+        colisTrash[s2.id].splice(ti,1);
+        saveAll(); renderColisTable();
+        showToastInfo(t('colis_restored'));
+      }
+    }
+  );
 }
 
 function computeSummary(){
@@ -1138,6 +1268,7 @@ function toggleHighlight(ref){
 /* ── 3D Pro state ── */
 let _lastPlaced=[], _lastRejected=[], _lastSession=null;
 let _xrayMode=false;
+let _layerFilters=new Set(['all']); // Set of active filters: 'all',0,1,2,'left','right'
 let _colorMode='ref'; // 'ref' | 'order' | 'height'
 let _stepMode=false, _stepIndex=0, _stepTimer=null;
 let _webglRenderer=null, _webglScene=null, _webglCamera=null;
@@ -1154,6 +1285,7 @@ function buildViz(){
   else                             draw3DWebGL(s,placed);
   drawLegend(s,placed,rejected);
   drawAlerts(rejected,placed);
+  updateLayerBtnLabels(placed);
   const hint=document.getElementById('viz-hint');
   if(hint) hint.textContent=activeVizMode==='3d'?t('hint_3d'):'';
   // Update weight bar
@@ -1181,6 +1313,8 @@ function switchViz(mode,el){
   if(pb) pb.style.display=is3d?'flex':'none';
   if(xb) xb.style.display=is3d?'inline-flex':'none';
   if(sb) sb.style.display=is3d?'inline-flex':'none';
+  const lfw=document.getElementById('layer-filter-wrap');
+  if(lfw) lfw.style.display=is3d?'flex':'none';
   buildViz();
 }
 
@@ -1204,7 +1338,7 @@ function draw2D(s,placed){
 
   // Title
   ctx.fillStyle='#1a1a18'; ctx.font='600 12px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
-  ctx.fillText(`${s.name} — Vue de dessus (L × l) — ${cl}×${cw} cm`, W/2, titleH);
+  ctx.fillText(s.name+' — Vue de dessus (L × l) — '+cl+'×'+cw+' cm', W/2, titleH);
 
   // Dimension labels
   ctx.fillStyle='#7a7a74'; ctx.font='10px Inter,sans-serif'; ctx.textAlign='center';
@@ -1235,7 +1369,7 @@ function draw2D(s,placed){
       const maxChars=Math.floor(w/5.5);
       const label=p.ref.length>maxChars?p.ref.slice(0,maxChars-1)+'…':p.ref;
       ctx.fillStyle=p.color;
-      ctx.font=`600 ${Math.min(9,Math.max(7,Math.floor(h/2.2)))}px Inter,sans-serif`;
+      ctx.font='600 '+Math.min(9,Math.max(7,Math.floor(h/2.2)))+'px Inter,sans-serif';
       ctx.textAlign='center';
       ctx.fillText(label, x+w/2, y+h/2);
       // Show dims only if tall enough
@@ -1392,6 +1526,57 @@ function drawSidewH(s, placed){
 
 /* ── 3D isometric with mouse drag rotation ── */
 
+function computeLoadingNumbers(placed, cl, cw, ch){
+  /*
+   * Same logic as exportLoadingPlan — assigns colNum and loadNum
+   * to each placed item so 3D view shows the same numbers as Excel.
+   */
+  if(!placed||!placed.length) return placed;
+
+  // Detect layers
+  const heights_n = placed.map(p=>p.ph).sort((a,b)=>a-b);
+  const medH_n = heights_n[Math.floor(heights_n.length/2)];
+  const minGap_n = Math.max(medH_n*0.5, 20);
+  const zS = [...new Set(placed.map(p=>Math.round(p.z)))].sort((a,b)=>a-b);
+  const thr = [zS[0]||0];
+  for(let i=1;i<zS.length;i++){
+    if(zS[i]-thr[thr.length-1]>=minGap_n) thr.push(zS[i]);
+  }
+  function li(z){ for(let i=thr.length-1;i>=0;i--){ if(z>=thr[i]-2) return i; } return 0; }
+
+  const numLayers = thr.length;
+
+  // Build columns (same order as Excel)
+  const cols = [];
+  for(let l=0;l<numLayers;l++){
+    const g=placed.filter(p=>li(p.z)===l&&(p.y+p.pw/2)/cw<0.5)
+      .sort((a,b)=>(b.x+b.pl/2)-(a.x+a.pl/2));
+    const d=placed.filter(p=>li(p.z)===l&&(p.y+p.pw/2)/cw>=0.5)
+      .sort((a,b)=>(b.x+b.pl/2)-(a.x+a.pl/2));
+    cols.push(g,d);
+  }
+  cols.forEach((col,ci)=>{
+    col.forEach((p,ri)=>{ p.colNum=(ci+1)*100+(ri+1); });
+  });
+
+  // Loading order (same sort as Excel)
+  const withLi = placed.map(p=>({...p, _li:li(p.z), _xz:(p.x+p.pl/2)/cl<0.33?0:((p.x+p.pl/2)/cl<0.66?1:2), _yz:(p.y+p.pw/2)/cw<0.5?0:1}));
+  const ordered = [...withLi].sort((a,b)=>{
+    if(b._xz!==a._xz) return b._xz-a._xz;
+    if(a._li!==b._li)  return a._li-b._li;
+    if(a._yz!==b._yz)  return a._yz-b._yz;
+    return (b.x+b.pl/2)-(a.x+a.pl/2);
+  });
+  ordered.forEach((p,i)=>{ p.loadNum=i+1; });
+
+  // Merge colNum and loadNum back into original placed items by reference matching
+  const result = placed.map(p=>{
+    const match = ordered.find(o=>o.ref===p.ref&&o.x===p.x&&o.y===p.y&&o.z===p.z);
+    return match ? {...p, colNum:match.colNum, loadNum:match.loadNum} : p;
+  });
+  return result;
+}
+
 function draw3DWebGL(s,placed){
   const container=document.getElementById('webgl-container');
   const canvas=document.getElementById('webgl-canvas');
@@ -1404,6 +1589,9 @@ function draw3DWebGL(s,placed){
 
   // Scale factor so container fits nicely
   const SCALE=0.008;
+  const isZh=(typeof lang!=='undefined'&&lang==='zh');
+  // Assign colNum + loadNum (same as Excel)
+  placed = computeLoadingNumbers(placed, cl, cw, ch);
 
   // Init or reuse renderer
   if(!_webglRenderer){
@@ -1416,8 +1604,8 @@ function draw3DWebGL(s,placed){
 
   // Scene
   _webglScene=new THREE.Scene();
-  _webglScene.background=new THREE.Color(0x0f172a);
-  _webglScene.fog=new THREE.Fog(0x0f172a,30,80);
+  _webglScene.background=new THREE.Color(0x0d1b2e);
+  _webglScene.fog=new THREE.Fog(0x0d1b2e,40,100);
 
   // Camera
   _webglCamera=new THREE.PerspectiveCamera(45,W/H,0.01,200);
@@ -1426,9 +1614,9 @@ function draw3DWebGL(s,placed){
   _webglCamera.lookAt(cx,cy,cz);
 
   // Lighting
-  const ambient=new THREE.AmbientLight(0xffffff,0.5);
+  const ambient=new THREE.AmbientLight(0xffffff,0.85);
   _webglScene.add(ambient);
-  const dirLight=new THREE.DirectionalLight(0xffffff,0.8);
+  const dirLight=new THREE.DirectionalLight(0xffffff,0.6);
   dirLight.position.set(cx+10,cy+20,cz+10);
   dirLight.castShadow=true;
   dirLight.shadow.mapSize.set(1024,1024);
@@ -1440,8 +1628,8 @@ function draw3DWebGL(s,placed){
   // Container wireframe
   const boxGeo=new THREE.BoxGeometry(cl*SCALE,ch*SCALE,cw*SCALE);
   const edges=new THREE.EdgesGeometry(boxGeo);
-  const wireAlpha=_xrayMode?0.8:0.3;
-  const wireMat=new THREE.LineBasicMaterial({color:0x3b82f6,transparent:true,opacity:wireAlpha});
+  const wireAlpha=_xrayMode?0.9:0.5;
+  const wireMat=new THREE.LineBasicMaterial({color:0x60a5fa,transparent:true,opacity:wireAlpha});
   const wire=new THREE.LineSegments(edges,wireMat);
   wire.position.set(cx,cy,cz);
   _webglScene.add(wire);
@@ -1459,8 +1647,40 @@ function draw3DWebGL(s,placed){
   grid.position.set(cx,-0.001,cz);
   _webglScene.add(grid);
 
+  // ── PORTE / FOND / GAUCHE / DROITE floor labels ──
+  const porteSprite=makeLabelSprite(isZh?'🚪 门口':'🚪 PORTE', 0x60a5fa, 320, 72);
+  porteSprite.position.set(0.01, -0.001, cz);
+  porteSprite.scale.set(0.9, 0.22, 1);
+  _webglScene.add(porteSprite);
+
+  const fondSprite=makeLabelSprite(isZh?'🔒 后壁':'🔒 FOND', 0xfb923c, 320, 72);
+  fondSprite.position.set(cl*SCALE-0.01, -0.001, cz);
+  fondSprite.scale.set(0.9, 0.22, 1);
+  _webglScene.add(fondSprite);
+
+  const gaucheSprite=makeLabelSprite(isZh?'← 左':'← GAUCHE', 0x86efac, 260, 56);
+  gaucheSprite.position.set(cx, -0.001, 0.01);
+  gaucheSprite.scale.set(0.7, 0.16, 1);
+  _webglScene.add(gaucheSprite);
+
+  const droiteSprite=makeLabelSprite(isZh?'右 →':'DROITE →', 0x86efac, 260, 56);
+  droiteSprite.position.set(cx, -0.001, cw*SCALE-0.01);
+  droiteSprite.scale.set(0.7, 0.16, 1);
+  _webglScene.add(droiteSprite);
+
   // Determine display list (step mode or full)
-  const displayList=_stepMode ? placed.slice(0,_stepIndex+1) : placed;
+  const displayList=(_stepMode ? placed.slice(0,_stepIndex+1) : placed).filter(p=>{
+    if(_layerFilters.has('all')) return true;
+    const li=getLayerIndex(p.z,ch);
+    const isLeft=(p.y+p.pw/2)/cw < 0.5;
+    // Check each active filter — OR logic (show if matches ANY active filter)
+    for(const f of _layerFilters){
+      if(f==='left' && isLeft) return true;
+      if(f==='right' && !isLeft) return true;
+      if(typeof f==='number' && li===f) return true;
+    }
+    return false;
+  });
   const maxH=Math.max(...placed.map(p=>p.z+p.ph),1);
 
   _webglBoxes=[];
@@ -1480,15 +1700,28 @@ function draw3DWebGL(s,placed){
     }
 
     const isHL=(highlightRef===null||p.ref===highlightRef);
-    const opacity=isHL?(_xrayMode?0.55:0.88):0.15;
+    const opacity=isHL?(_xrayMode?0.45:0.92):(_xrayMode?0.08:0.75);
 
     const geo=new THREE.BoxGeometry(pl*SCALE,ph*SCALE,pw*SCALE);
-    const mat=new THREE.MeshStandardMaterial({
-      color:hexColor,transparent:true,opacity,
-      roughness:0.3,metalness:0.1,
-      side:_xrayMode?THREE.DoubleSide:THREE.FrontSide
+
+    // Build label texture for top face
+    const colN=p.colNum||'', loadN=p.loadNum||'';
+    // 6 materials — label on ALL visible faces
+    // Face order: +X(right), -X(left), +Y(top), -Y(bot), +Z(front), -Z(back)
+    // Each face gets a texture matching its dimensions
+    // pl=length(X), ph=height(Y), pw=depth(Z)
+    const texPX = makeTopFaceTex(colN,loadN,ref,hexColor, ph, pw); // right  H×W
+    const texNX = makeTopFaceTex(colN,loadN,ref,hexColor, ph, pw); // left   H×W
+    const texPY = makeTopFaceTex(colN,loadN,ref,hexColor, pl, pw); // top    L×W
+    const texNY = makeTopFaceTex(colN,loadN,ref,hexColor, pl, pw); // bottom L×W
+    const texPZ = makeTopFaceTex(colN,loadN,ref,hexColor, pl, ph); // front  L×H
+    const texNZ = makeTopFaceTex(colN,loadN,ref,hexColor, pl, ph); // back   L×H
+    const mkMat=(tex)=>new THREE.MeshStandardMaterial({
+      map:tex, transparent:(_xrayMode||opacity<1),
+      opacity:opacity, roughness:0.35, metalness:0.05
     });
-    const mesh=new THREE.Mesh(geo,mat);
+    const mats=[mkMat(texPX),mkMat(texNX),mkMat(texPY),mkMat(texNY),mkMat(texPZ),mkMat(texNZ)];
+    const mesh=new THREE.Mesh(geo,mats);
     mesh.position.set(
       (x+pl/2)*SCALE,
       (z+ph/2)*SCALE,
@@ -1502,17 +1735,11 @@ function draw3DWebGL(s,placed){
 
     // Edges on box
     const eGeo=new THREE.EdgesGeometry(geo);
-    const eMat=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:isHL?0.4:0.05});
+    const eMat=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:isHL?0.55:0.15});
     const eLine=new THREE.LineSegments(eGeo,eMat);
     mesh.add(eLine);
 
-    // Label sprite (only if not too small)
-    if(pl*SCALE>0.1||ph*SCALE>0.1){
-      const sprite=makeTextSprite(ref,hexColor);
-      sprite.position.set(0,(ph/2+2)*SCALE,0);
-      sprite.scale.set(0.4,0.15,1);
-      mesh.add(sprite);
-    }
+    // Label baked into top face texture (see makeTopFaceTex)
   });
 
   // Dimension arrows
@@ -1523,6 +1750,98 @@ function draw3DWebGL(s,placed){
   // Render loop
   initOrbitControls(W,H,cx,cy,cz);
   renderLoop();
+}
+
+function makeTopFaceTex(colN, loadN, ref, hexColor, plCm, pwCm){
+  /*
+   * Renders text DIRECTLY onto the top face of the box.
+   * Canvas aspect ratio matches the actual box top (pl × pw).
+   * Text scales with the geometry — no floating sprite.
+   */
+  // Normalize canvas: keep proportions of the box top
+  const ratio = Math.max(plCm, pwCm) / Math.min(plCm, pwCm);
+  const W = 512;
+  const H = Math.round(W / ratio);
+  const c = document.createElement('canvas');
+  c.width = W; c.height = Math.max(H, 128);
+  const ctx = c.getContext('2d');
+
+  // Base color fill (same as box color, slightly lighter for contrast)
+  const hexStr = '#' + hexColor.toString(16).padStart(6,'0');
+  ctx.fillStyle = hexStr;
+  ctx.fillRect(0, 0, W, c.height);
+
+  // Darken overlay for readability
+  ctx.fillStyle = 'rgba(0,0,0,0.38)';
+  ctx.fillRect(0, 0, W, c.height);
+
+  // Border
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(4, 4, W-8, c.height-8);
+
+  // Main number (colNum)
+  const numStr = colN ? String(colN) : '';
+  const loadStr = loadN ? '[#'+loadN+']' : '';
+
+  // Auto font size based on canvas
+  const fsBig = Math.round(c.height * 0.45);
+  const fsMed = Math.round(c.height * 0.22);
+  const fsSmall = Math.round(c.height * 0.18);
+
+  ctx.textAlign = 'center';
+
+  // colNum — large, white, centered
+  if(numStr){
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold '+fsBig+'px Arial';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(numStr, W/2, c.height * 0.38);
+  }
+
+  // loadNum — medium, yellow
+  if(loadStr){
+    ctx.fillStyle = '#fde68a';
+    ctx.font = 'bold '+fsMed+'px Arial';
+    ctx.fillText(loadStr, W/2, c.height * 0.65);
+  }
+
+  // ref name — small, bottom, semi-transparent white
+  if(ref){
+    ctx.fillStyle = 'rgba(255,255,255,0.80)';
+    ctx.font = fsSmall+'px Arial';
+    ctx.fillText(ref.substring(0,16), W/2, c.height * 0.86);
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+function makeBoxLabel(line1, line2, hexColor){
+  // Legacy — kept for compat, not used
+  return makeLabelSprite(line1, hexColor, 320, 80);
+}
+
+function makeLabelSprite(text, color, w, h){
+  const c=document.createElement('canvas'); c.width=w||256; c.height=h||64;
+  const ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  // Background pill
+  ctx.fillStyle='rgba(0,0,0,0.65)';
+  ctx.beginPath(); ctx.roundRect(2,2,c.width-4,c.height-4,12); ctx.fill();
+  // Border in color
+  const hexStr='#'+color.toString(16).padStart(6,'0');
+  ctx.strokeStyle=hexStr; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.roundRect(2,2,c.width-4,c.height-4,12); ctx.stroke();
+  // Text
+  ctx.fillStyle=hexStr;
+  ctx.font='bold '+(h?Math.round(h*0.45):24)+'px Arial';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(text, c.width/2, c.height/2);
+  const tex=new THREE.CanvasTexture(c);
+  const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false});
+  return new THREE.Sprite(mat);
 }
 
 function makeTextSprite(text, hexColor){
@@ -1623,6 +1942,90 @@ function setPreset(name){
   };
   const p=presets[name]||presets.iso;
   _camTheta=p.theta; _camPhi=p.phi; _camRadius=p.r;
+}
+
+function updateLayerBtnLabels(placed){
+  if(!placed||!placed.length) return;
+  const ch = _lastSession?_lastSession.container.h:239;
+  const nLayers = getNumLayers();
+  // Update tooltip of each layer button
+  const layerNames=['Sol (1ère rangée)','2ème couche','3ème couche','4ème couche'];
+  const layerNames_zh=['底层','第2层','第3层','第4层'];
+  const isZh=(typeof lang!=='undefined'&&lang==='zh');
+  [0,1,2].forEach(li=>{
+    const btn=document.getElementById('layer-btn-'+li);
+    if(!btn) return;
+    const count=placed.filter(p=>getLayerIndex(p.z,ch)===li).length;
+    if(li<nLayers&&count>0){
+      btn.style.display='inline-flex';
+      btn.title=(isZh?layerNames_zh[li]:layerNames[li])+' ('+count+' colis)';
+    } else {
+      btn.style.display='none';
+    }
+  });
+}
+
+function setLayerFilter(f){
+  const idMap={'all':'layer-btn-all',0:'layer-btn-0',1:'layer-btn-1',2:'layer-btn-2','left':'layer-btn-left','right':'layer-btn-right'};
+  if(f==='all'){
+    // All = reset everything
+    _layerFilters=new Set(['all']);
+  } else {
+    // Toggle this filter
+    _layerFilters.delete('all');
+    if(_layerFilters.has(f)){
+      _layerFilters.delete(f);
+      // If nothing left, go back to all
+      if(_layerFilters.size===0) _layerFilters=new Set(['all']);
+    } else {
+      _layerFilters.add(f);
+    }
+  }
+  // Update button states
+  document.querySelectorAll('.layer-btn').forEach(b=>b.classList.remove('active'));
+  _layerFilters.forEach(k=>{
+    const btn=document.getElementById(idMap[k]);
+    if(btn) btn.classList.add('active');
+  });
+  if(activeVizMode==='3d'){
+    buildViz();
+  } else {
+    // Still refresh legend even in 2D mode
+    if(_lastPlaced&&_lastSession) drawLegend(_lastSession,_lastPlaced,_lastRejected);
+  }
+}
+
+function computeLayerThresholds(){
+  /* Build layers based on actual stacking:
+     - Median height of items per Z-group = natural layer break
+     - Use gap between Z-starts that exceeds the median item height
+  */
+  if(!_lastPlaced||!_lastPlaced.length) return [0];
+  // Median item height (smallest dimension usually = stacking height)
+  const heights = _lastPlaced.map(p=>p.ph).sort((a,b)=>a-b);
+  const medH = heights[Math.floor(heights.length/2)];
+  const minGap = Math.max(medH*0.5, 20); // at least 20cm gap between layers
+
+  const zStarts = [...new Set(_lastPlaced.map(p=>Math.round(p.z)))].sort((a,b)=>a-b);
+  const thresholds = [zStarts[0]||0];
+  for(let i=1;i<zStarts.length;i++){
+    if(zStarts[i] - thresholds[thresholds.length-1] >= minGap)
+      thresholds.push(zStarts[i]);
+  }
+  return thresholds;
+}
+
+function getLayerIndex(z, ch){
+  if(!_lastPlaced||!_lastPlaced.length) return 0;
+  const thresholds = computeLayerThresholds();
+  for(let i=thresholds.length-1;i>=0;i--){
+    if(z >= thresholds[i]-2) return i;
+  }
+  return 0;
+}
+
+function getNumLayers(){
+  return computeLayerThresholds().length;
 }
 
 function toggleXray(){
@@ -1860,11 +2263,36 @@ function drawLegend(s,placed,rejected){
   const rotRefs=new Set((placed||[]).filter(p=>p.rotated).map(p=>p.ref));
   const placedMap={};
   (placed||[]).forEach(p=>{ if(!placedMap[p.ref]) placedMap[p.ref]=p; });
-  // Count placed per ref for partial badge
   const placedCount={};
   (placed||[]).forEach(p=>{ placedCount[p.ref]=(placedCount[p.ref]||0)+1; });
   const totalQtyMap={};
   (s?s.colis:[]).forEach(c=>{ const ref=c[1]||''; if(ref) totalQtyMap[ref]=+c[5]||1; });
+
+  /* Build per-ref layer index map */
+  const ch_cont = s?s.container.h:1;
+  const refLayerMap={};
+  (placed||[]).forEach(p=>{
+    refLayerMap[p.ref]=getLayerIndex(p.z, ch_cont);
+  });
+  const refSideMap={};
+  const cw_cont = s?s.container.w:1;
+  (placed||[]).forEach(p=>{
+    refSideMap[p.ref]=(p.y+p.pw/2)/cw_cont < 0.5 ? 'left' : 'right';
+  });
+
+  /* Check if a ref is "active" given current layer filter */
+  function isActive(ref){
+    if(_layerFilters.has('all')) return true;
+    const li=refLayerMap[ref];
+    const side=refSideMap[ref];
+    for(const f of _layerFilters){
+      if(f==='left' && side==='left') return true;
+      if(f==='right' && side==='right') return true;
+      if(typeof f==='number' && li===f) return true;
+    }
+    return false;
+  }
+
   const seen=new Set();
   let html='<div style="display:flex;flex-wrap:wrap;gap:5px">';
   s.colis.forEach((c,i)=>{
@@ -1877,6 +2305,13 @@ function drawLegend(s,placed,rejected){
     const pm=placedMap[ref];
     const vol=(+c[2]*+c[3]*+c[4]/1000000).toFixed(4);
     const dimStr=isRot&&pm?`${pm.pl}×${pm.pw}×${pm.ph}`:c[2]+'×'+c[3]+'×'+c[4];
+
+    /* Dim items not in active layer */
+    const active=isActive(ref);
+    const dimmed=!active&&!_layerFilters.has('all');
+    const opacity=dimmed?'0.25':'1';
+    const filterStyle=dimmed?'filter:grayscale(80%) opacity(0.3)':'';
+
     const bc=isRej?'#fca5a5':isRot?'#fde68a':color+'44';
     const bg=isRej?'#fef2f2':isRot?'#fffbeb':color+'11';
     const badge=isRej
@@ -1887,7 +2322,7 @@ function drawLegend(s,placed,rejected){
         ?`<span style="font-size:9px;background:#fffbeb;color:#78350f;padding:1px 5px;border-radius:3px;font-weight:700">${placedCount[ref]}/${totalQtyMap[ref]} placés</span>`
         :'<span style="font-size:9px;background:#f0fdf4;color:#166534;padding:1px 5px;border-radius:3px;font-weight:700">'+t('badge_ok')+'</span>';
     html+=`<div data-ref="${ref}" onclick="toggleHighlight('${ref}')" onmouseenter="setHighlight('${ref}')" onmouseleave="setHighlight(null)"
-      style="display:flex;align-items:center;gap:5px;padding:4px 9px;border:1px solid ${bc};border-radius:5px;background:${bg};cursor:pointer;transition:box-shadow .12s">
+      style="display:flex;align-items:center;gap:5px;padding:4px 9px;border:1px solid ${bc};border-radius:5px;background:${bg};cursor:pointer;transition:all .15s;opacity:${opacity};${filterStyle}${dimmed?';pointer-events:none':''}">
       <span style="width:8px;height:8px;border-radius:2px;background:${isRej?'#ef4444':color};flex-shrink:0;display:inline-block"></span>
       <span style="font-size:11px;font-weight:600;color:var(--text)">${ref}</span>
       <span style="font-size:10px;color:var(--text-muted)">${dimStr} cm · ×${+c[5]||1} · ${vol} m³</span>
@@ -1990,6 +2425,265 @@ function updateExportPage(){
   document.getElementById('ex-pieces').textContent=tP;
 }
 
+
+/* ============================================================
+   PLAN DE CHARGEMENT — Export Excel imprimable
+   Système de coordonnées (personne face à la porte) :
+   X=0 → porte (AVANT), X=max → FOND
+   Y=0 → GAUCHE, Y=max → DROITE
+   Z=0 → SOL, Z=max → HAUT
+   ============================================================ */
+function getPositionLabel(x, y, z, cl, cw, ch, isZh){
+  // X axis: depth (Avant / Milieu / Fond)
+  const xPct = x / cl;
+  let depth, depth_zh;
+  if(xPct < 0.33)      { depth='Avant';  depth_zh='前部'; }
+  else if(xPct < 0.66) { depth='Milieu'; depth_zh='中部'; }
+  else                  { depth='Fond';   depth_zh='后部'; }
+
+  // Y axis: side (Gauche / Centre / Droite)
+  const yPct = y / cw;
+  let side, side_zh;
+  if(yPct < 0.33)      { side='Gauche'; side_zh='左侧'; }
+  else if(yPct < 0.66) { side='Centre'; side_zh='中间'; }
+  else                  { side='Droite'; side_zh='右侧'; }
+
+  // Z axis: height (Sol / Milieu / Haut)
+  const zPct = z / ch;
+  let height, height_zh;
+  if(zPct < 0.33)      { height='Sol';    height_zh='底层'; }
+  else if(zPct < 0.66) { height='Milieu'; height_zh='中层'; }
+  else                  { height='Haut';   height_zh='顶层'; }
+
+  if(isZh) return depth_zh + ' · ' + side_zh + ' · ' + height_zh;
+  return depth + ' · ' + side + ' · ' + height;
+}
+
+function getDetailedCoords(x, y, z, pl, pw, ph, cl, cw, ch, isZh){
+  // Center of the box
+  const cx = Math.round(x + pl/2);
+  const cy = Math.round(y + pw/2);
+  const cz = Math.round(z + ph/2);
+  if(isZh) return `距门 ${cx}cm · 距左 ${cy}cm · 距地 ${z}cm`;
+  return `${cx}cm du fond · ${cy}cm du bord gauche · ${z}cm du sol`;
+}
+
+function exportLoadingPlan(){
+  const s = getSession();
+  if(!s){ alert('Aucun chargement actif.'); return; }
+  const {placed, rejected} = placeColis(s);
+  if(!placed.length){ alert('Aucun colis placé. Vérifiez vos données.'); return; }
+
+  const cl=s.container.l, cw=s.container.w, ch=s.container.h;
+  const isZh = (lang === 'zh');
+
+  /* ── Detect layers (same algo as getLayerIndex) ── */
+  const heights_e = placed.map(p=>p.ph).sort((a,b)=>a-b);
+  const medH_e = heights_e[Math.floor(heights_e.length/2)];
+  const minGap_e = Math.max(medH_e*0.5, 20);
+  const zStarts_e = [...new Set(placed.map(p=>Math.round(p.z)))].sort((a,b)=>a-b);
+  const layerThresholds = [zStarts_e[0]||0];
+  for(let i=1;i<zStarts_e.length;i++){
+    if(zStarts_e[i]-layerThresholds[layerThresholds.length-1] >= minGap_e)
+      layerThresholds.push(zStarts_e[i]);
+  }
+  const numLayers = layerThresholds.length;
+
+  function getLayerIdxLocal(z){
+    for(let i=layerThresholds.length-1;i>=0;i--){
+      if(z>=layerThresholds[i]-2) return i;
+    }
+    return 0;
+  }
+
+  /* ── Zone label ── */
+  function zoneLabel(x, y, z){
+    const xPct=x/cl, yPct=y/cw;
+    const xZone = xPct<0.33 ? 0 : xPct<0.66 ? 1 : 2; // 0=Avant, 1=Milieu, 2=Fond
+    const yZone = yPct<0.5 ? 0 : 1; // 0=Gauche, 1=Droite
+    const li = getLayerIdxLocal(z);
+    const depthFr=['Avant','Milieu','Fond'];   const depthZh=['前部','中部','后部'];
+    const sideFr=['Gauche','Droite'];            const sideZh=['左侧','右侧'];
+    const lyrFr=['Sol','2ème couche','3ème couche','4ème couche'];
+    const lyrZh=['底层','第2层','第3层','第4层'];
+    return {
+      xZone, yZone, li,
+      depth: isZh?depthZh[xZone]:depthFr[xZone],
+      side:  isZh?sideZh[yZone]:sideFr[yZone],
+      lyr:   isZh?(lyrZh[li]||'第'+(li+1)+'层'):(lyrFr[li]||'Couche '+(li+1))
+    };
+  }
+
+  /* ══════════════════════════════════════════════════════
+     LOADING ORDER:
+     Charger depuis le fond vers la porte, couche par couche.
+     Pour chaque position X (Fond→Milieu→Avant) :
+       Pour chaque couche Z (Sol→Haut) :
+         D'abord Gauche, puis Droite
+     = exact order a loader would fill the container
+  ══════════════════════════════════════════════════════ */
+
+  // Assign each colis its zone
+  const withZone = placed.map((p,i)=>{
+    const z = zoneLabel(p.x, p.y, p.z);
+    return {...p, ...z, origIdx:i};
+  });
+
+  // Sort in loading order:
+  // 1. xZone DESC (2=Fond first)
+  // 2. li ASC (Sol first → then higher layers)
+  // 3. yZone ASC (Gauche first)
+  // 4. x DESC (deepest within zone first)
+  const loadingOrder = [...withZone].sort((a,b)=>{
+    if(b.xZone !== a.xZone) return b.xZone - a.xZone;   // Fond first
+    if(a.li !== b.li)        return a.li - b.li;          // Sol first
+    if(a.yZone !== b.yZone)  return a.yZone - b.yZone;   // Gauche first
+    return (b.x+b.pl/2)-(a.x+a.pl/2);                    // Deepest first
+  });
+
+  // Assign sequential loading numbers
+  loadingOrder.forEach((p,i)=>{ p.loadNum = i+1; });
+
+  /* ── Build column groups for visual plan ── */
+  // Columns: for each layer, Gauche then Droite
+  // Within each column, sort Fond→Avant (x DESC)
+  const cols = [];
+  for(let li=0;li<numLayers;li++){
+    const gauche = withZone.filter(p=>p.li===li && p.yZone===0)
+      .sort((a,b)=>(b.x+b.pl/2)-(a.x+a.pl/2));
+    const droite = withZone.filter(p=>p.li===li && p.yZone===1)
+      .sort((a,b)=>(b.x+b.pl/2)-(a.x+a.pl/2));
+    cols.push(gauche, droite);
+  }
+
+  // Assign column display numbers: 1xx, 2xx, 3xx...
+  cols.forEach((col, ci)=>{
+    col.forEach((p, ri)=>{ p.colNum = (ci+1)*100 + (ri+1); });
+  });
+
+  /* ── Build visual plan sheet (like the screenshot) ── */
+  const lyrNamesFr=['Sol','2ème couche','3ème couche','4ème couche'];
+  const lyrNamesZh=['底层','第2层','第3层','第4层'];
+
+  const headerRow=[];
+  for(let li=0;li<numLayers;li++){
+    const lName=isZh?(lyrNamesZh[li]||'第'+(li+1)+'层'):(lyrNamesFr[li]||'Couche '+(li+1));
+    headerRow.push('N°', isZh?lName+'·左':lName+' · Gauche', '序号', isZh?lName+'·右':lName+' · Droite');
+  }
+
+  const maxRows = Math.max(...cols.map(c=>c.length), 0);
+  const aoa = [headerRow];
+  aoa.push([isZh?'══ 后壁 ══ AU FOND DU CONTENEUR ══ 后壁 ══':'══ AU FOND DU CONTENEUR ══', ...Array(headerRow.length-1).fill('')]);
+
+  for(let r=0;r<maxRows;r++){
+    const row=[];
+    for(let li=0;li<numLayers;li++){
+      const g=cols[li*2][r], d=cols[li*2+1][r];
+      // Show colNum (position ref) + loadNum (loading order) + name
+      const gTxt = g ? `${g.ref} (${g.pl}×${g.pw}×${g.ph})${g.rotated?' ⟳':''} [#${g.loadNum}]` : '';
+      const dTxt = d ? `${d.ref} (${d.pl}×${d.pw}×${d.ph})${d.rotated?' ⟳':''} [#${d.loadNum}]` : '';
+      row.push(g?g.colNum:'', gTxt, d?d.colNum:'', dTxt);
+    }
+    aoa.push(row);
+  }
+
+  aoa.push([isZh?'══ 门口 ══ LA PORTE DU CONTENEUR ══ 门口 ══':'══ LA PORTE DU CONTENEUR ══', ...Array(headerRow.length-1).fill('')]);
+
+  // Add legend
+  aoa.push([]);
+  aoa.push([isZh?'说明:':'Légende:', isZh?'N° = numéro de position dans le conteneur':'N° = numéro de position dans le conteneur']);
+  aoa.push(['', isZh?'[#N] = ordre de chargement (commencer par #1)':'[#N] = ordre de chargement (commencer par #1)']);
+  aoa.push(['', isZh?'⟳ = colis pivoté par l\'algorithme':'⟳ = colis pivoté par l\'algorithme']);
+
+  const wb_ref = XLSX.utils.book_new();
+  const ws1 = XLSX.utils.aoa_to_sheet(aoa);
+  ws1['!merges'] = [
+    {s:{r:1,c:0}, e:{r:1,c:headerRow.length-1}},
+    {s:{r:aoa.length-4,c:0}, e:{r:aoa.length-4,c:headerRow.length-1}},
+  ];
+  const colW=[];
+  for(let i=0;i<headerRow.length;i++) colW.push(i%2===0?{wch:6}:{wch:34});
+  ws1['!cols']=colW;
+  XLSX.utils.book_append_sheet(wb_ref, ws1, isZh?'装载计划':'Plan visuel');
+
+  /* ── Sheet 2: LOADING ORDER LIST (ordered #1 → #N) ── */
+  const lH = isZh
+    ? ['#装载顺序','位置编号','货物名称','深度区域','侧面','层','长(cm)','宽(cm)','高(cm)','距门(cm)','距左(cm)','距地(cm)','已旋转','备注']
+    : ['#Ordre','N° position','Référence','Zone profondeur','Côté','Couche','L (cm)','l (cm)','H (cm)','Dist. porte','Dist. gauche','Haut. sol','Pivoté','Notes'];
+
+  const loadRows = loadingOrder.map(p=>{
+    const matched = cols.flat().find(x=>x.ref===p.ref&&x.x===p.x&&x.y===p.y&&x.z===p.z);
+    return {
+      [lH[0]]: p.loadNum,
+      [lH[1]]: matched?.colNum||'',
+      [lH[2]]: p.ref,
+      [lH[3]]: p.depth,
+      [lH[4]]: p.side,
+      [lH[5]]: p.lyr,
+      [lH[6]]: p.pl,
+      [lH[7]]: p.pw,
+      [lH[8]]: p.ph,
+      [lH[9]]: Math.round(p.x+p.pl/2),
+      [lH[10]]: Math.round(p.y+p.pw/2),
+      [lH[11]]: Math.round(p.z),
+      [lH[12]]: p.rotated?(isZh?'是':'Oui'):'',
+      [lH[13]]: ''
+    };
+  });
+
+  // Add section headers between zones for readability
+  const loadRowsWithHeaders = [];
+  let lastZone='';
+  loadRows.forEach(r=>{
+    const zone=r[lH[3]]+' · '+r[lH[5]];
+    if(zone!==lastZone){
+      loadRowsWithHeaders.push({[lH[0]]:'▶', [lH[2]]:'━━ '+zone.toUpperCase()+' ━━'});
+      lastZone=zone;
+    }
+    loadRowsWithHeaders.push(r);
+  });
+
+  if(rejected.length){
+    loadRowsWithHeaders.push({});
+    loadRowsWithHeaders.push({[lH[0]]:'⚠', [lH[2]]:isZh?'未装入':'NON PLACÉS'});
+    rejected.forEach(r2=>{
+      loadRowsWithHeaders.push({[lH[0]]:'✗',[lH[2]]:r2.ref,[lH[6]]:r2.l,[lH[7]]:r2.w,[lH[8]]:r2.h,[lH[4]]:isZh?'超出':'Hors conteneur'});
+    });
+  }
+
+  const ws2 = XLSX.utils.json_to_sheet(loadRowsWithHeaders, {header:lH});
+  ws2['!cols']=[{wch:8},{wch:10},{wch:20},{wch:12},{wch:9},{wch:13},{wch:7},{wch:7},{wch:7},{wch:11},{wch:11},{wch:9},{wch:7},{wch:14}];
+  XLSX.utils.book_append_sheet(wb_ref, ws2, isZh?'装载顺序':'Ordre de chargement');
+
+  /* ── Sheet 3: RÉSUMÉ ── */
+  const totalVol=placed.reduce((a,p)=>a+p.pl*p.pw*p.ph,0)/1e6;
+  const contVol=cl*cw*ch/1e6;
+  const summary=[
+    [isZh?'装载报告':'RAPPORT DE CHARGEMENT', s.name],[],
+    [isZh?'集装箱':'Conteneur', `${cl}×${cw}×${ch} cm`],
+    [isZh?'有效容积':'Volume utile', contVol.toFixed(3)+' m³'],
+    [isZh?'已装货物':'Colis chargés', placed.length],
+    [isZh?'未装货物':'Colis rejetés', rejected.length],
+    [isZh?'装载体积':'Volume chargé', totalVol.toFixed(3)+' m³'],
+    [isZh?'装载率':'Taux remplissage', (totalVol/contVol*100).toFixed(1)+'%'],
+    [isZh?'检测层数':'Couches détectées', numLayers],[],
+    [isZh?'编号说明':'NUMÉROTATION'],[],
+    [isZh?'位置编号':'N° de position', isZh?'Nxx = numéro dans la colonne de rangement':'Nxx = position dans la colonne'],
+    [isZh?'装载顺序':'Ordre de chargement [#N]', isZh?'ordre physique de mise en conteneur':'ordre physique pour charger'],
+    [],[isZh?'列说明':'Colonnes :'],
+  ];
+  for(let li=0;li<numLayers;li++){
+    const lName=isZh?(lyrNamesZh[li]||'第'+(li+1)+'层'):(lyrNamesFr[li]||'Couche '+(li+1));
+    summary.push([(li*2+1)*100+'xx', isZh?lName+'·左':'Gauche · '+lName]);
+    summary.push([(li*2+2)*100+'xx', isZh?lName+'·右':'Droite · '+lName]);
+  }
+  const ws3=XLSX.utils.aoa_to_sheet(summary);
+  ws3['!cols']=[{wch:22},{wch:32}];
+  XLSX.utils.book_append_sheet(wb_ref, ws3, isZh?'说明':'Résumé');
+
+  XLSX.writeFile(wb_ref, s.name+'-plan-chargement.xlsx');
+}
+
 function exportExcel(){
   const s=getSession(); if(!s) return;
   const cVol=(s.container.l*s.container.w*s.container.h)/1000000;
@@ -2074,6 +2768,23 @@ const T = {
     tab_export: '4 · Export',
     btn_new: '+ Nouveau chargement',
     save_btn: 'Enregistrer',
+    dup_tooltip: 'Dupliquer cette ligne',
+    del_tooltip: 'Supprimer cette ligne',
+    colis_deleted: 'Ligne supprimée',
+    colis_restored: 'Ligne restaurée !',
+    colis_duped: 'Ligne dupliquée',
+    session_deleted: 'Chargement supprimé',
+    session_restored: 'Chargement restauré !',
+    undo_btn: 'Annuler',
+    arch_empty: 'Aucun élément supprimé récemment.',
+    arch_restore: 'Restaurer',
+    arch_delete: 'Supprimer définitivement',
+    arch_days_left: '{n} jour(s) restant(s)',
+    lbl_arch_sess: 'Supprimés',
+    lbl_arch_colis: 'Supprimés',
+    arch_sess_title: 'Chargements supprimés',
+    arch_colis_title: 'Colis supprimés',
+    arch_sub: 'Conservés 30 jours · Cliquez pour restaurer',
     saved_ok: '✓ Enregistré',
     save_badge: 'Sauvegardé',
     // Sessions page
@@ -2141,6 +2852,9 @@ const T = {
     // Export page
     export_title: 'Export du chargement',
     btn_excel: 'Télécharger le récapitulatif Excel (.xlsx)',
+    btn_loading_plan: '📋 Télécharger le plan de chargement (.xlsx)',
+    lbl_loading_plan_title: 'Plan de chargement imprimable',
+    lbl_loading_plan_desc: 'Tableau Excel avec position de chaque colis — prêt à imprimer pour l\'équipe de chargement.',
     btn_tpl: "Télécharger le modèle d'import (.xlsx vierge)",
     btn_png2d: 'Télécharger vue côté (PNG)',
     btn_png3d: 'Télécharger vue 3D (PNG)',
@@ -2154,6 +2868,7 @@ const T = {
     badge_partial: 'PARTIEL',
     // New viz toolbar
     xray_lbl: 'X-Ray',
+    lbl_layers: 'Couches',
     step_lbl: 'Séquence',
     color_by_ref: 'Couleur par référence',
     color_by_order: 'Couleur par ordre',
@@ -2218,8 +2933,6 @@ const T = {
     excel_fill: 'Taux remplissage',
     excel_container: 'Conteneur',
     tpl_ref: 'MP-R22-001',
-    signin_lbl: 'Connexion Google',
-    signout_lbl: 'Déconnexion',
   },
   zh: {
     nav_brand: '集装箱<span style="color:var(--accent)">优化器</span>',
@@ -2230,6 +2943,23 @@ const T = {
     tab_export: '4 · 导出',
     btn_new: '+ 新建装载',
     save_btn: '保存',
+    dup_tooltip: '复制此行',
+    del_tooltip: '删除此行',
+    colis_deleted: '行已删除',
+    colis_restored: '行已恢复！',
+    colis_duped: '行已复制',
+    session_deleted: '装载已删除',
+    session_restored: '装载已恢复！',
+    undo_btn: '撤销',
+    arch_empty: '暂无最近删除的记录。',
+    arch_restore: '恢复',
+    arch_delete: '永久删除',
+    arch_days_left: '剩余{n}天',
+    lbl_arch_sess: '已删除',
+    lbl_arch_colis: '已删除',
+    arch_sess_title: '已删除装载',
+    arch_colis_title: '已删除货物',
+    arch_sub: '保留30天 · 点击恢复',
     saved_ok: '✓ 已保存',
     save_badge: '已保存',
     sessions_title: '我的装载记录',
@@ -2291,6 +3021,9 @@ const T = {
     legend_stacked: '叠放',
     export_title: '导出装载记录',
     btn_excel: '下载汇总表 (.xlsx)',
+    btn_loading_plan: '📋 下载装载计划 (.xlsx)',
+    lbl_loading_plan_title: '可打印装载计划',
+    lbl_loading_plan_desc: '包含每件货物位置的 Excel 表格，供装箱人员使用。',
     btn_tpl: '下载导入模板 (.xlsx)',
     btn_png2d: '下载侧视图 (PNG)',
     btn_png3d: '下载3D视图 (PNG)',
@@ -2303,6 +3036,7 @@ const T = {
     badge_partial: '部分',
     // New viz toolbar
     xray_lbl: 'X光透视',
+    lbl_layers: '层级',
     step_lbl: '逐步加载',
     color_by_ref: '按货物编号着色',
     color_by_order: '按装载顺序着色',
@@ -2366,8 +3100,6 @@ const T = {
     excel_fill: '装载率',
     excel_container: '集装箱',
     tpl_ref: 'MP-R22-001',
-    signin_lbl: 'Google 登录',
-    signout_lbl: '退出登录',
   }
 };
 
@@ -2382,7 +3114,6 @@ function applyLang(){
   s('tab-sessions','tab_sessions'); s('tab-container','tab_container');
   s('tab-colis','tab_colis'); s('tab-viz','tab_viz'); s('tab-export','tab_export');
   document.querySelectorAll('.btn-new-charge').forEach(b=>b.textContent=t('btn_new'));
-  s('signin-lbl','signin_lbl');
 
   // Sessions page
   s('sessions-title','sessions_title'); s('sessions-sub','sessions_sub');
@@ -2408,7 +3139,7 @@ function applyLang(){
   s('btn-dl-png-lbl','btn_download'); s('btn-pdf-lbl','btn_pdf');
   s('btn-edit-colis-lbl','btn_edit'); s('btn-reset3d-lbl','btn_reset3d');
   // New viz toolbar elements
-  s('xray-lbl','xray_lbl'); s('step-lbl','step_lbl');
+  s('xray-lbl','xray_lbl'); s('step-lbl','step_lbl'); s('lbl-layers','lbl_layers');
   s('lbl-iso','preset_iso'); s('lbl-front','preset_front'); s('lbl-pside','preset_side'); s('lbl-top','preset_top');
   s('viz-hint3d','hint_3d');
   // Color mode select options
@@ -2432,6 +3163,9 @@ function applyLang(){
 
   // Export page
   s('export-title-lbl','export_title');
+  s('btn-loading-plan-lbl','btn_loading_plan');
+  s('lbl-loading-plan-title','lbl_loading_plan_title');
+  s('lbl-loading-plan-desc','lbl_loading_plan_desc');
   s('btn-export-excel-lbl','btn_excel'); s('btn-export-tpl-lbl','btn_tpl');
   s('btn-export-png2d-lbl','btn_png2d'); s('btn-export-png3d-lbl','btn_png3d');
   s('btn-new-load-lbl','btn_new_load');
@@ -2470,47 +3204,9 @@ function toggleLang(){
   applyLang();
 }
 
+loadAll();
+renderSessions();
 applyLang();
-
-// Auth wall — show until Firebase responds
-document.getElementById('auth-wall').style.display='flex';
-
-window.addEventListener('firebase-ready', function(){
-  const { auth, onAuthStateChanged } = window._firebase;
-  onAuthStateChanged(auth, function(user){
-    _currentUser = user;
-    window._firebaseReady = true;
-    const authWall = document.getElementById('auth-wall');
-    const authUser = document.getElementById('auth-user');
-    const btnSignin = document.getElementById('btn-signin');
-    if(user){
-      authWall.style.display = 'none';
-      authUser.style.display = 'flex';
-      btnSignin.style.display = 'none';
-      const avatar = document.getElementById('auth-avatar');
-      const name = document.getElementById('auth-name');
-      if(avatar) avatar.src = user.photoURL || '';
-      if(name) name.textContent = user.displayName || user.email || '';
-      loadAll();
-      startFirestoreSync();
-      if(!activeSession) renderSessions(); else showPage('sessions');
-    } else {
-      authWall.style.display = 'flex';
-      authUser.style.display = 'none';
-      btnSignin.style.display = 'inline-flex';
-      sessions = []; activeSession = null;
-    }
-  });
-});
-
-// Fallback: if Firebase fails to load
-setTimeout(function(){
-  if(!window._firebase){
-    document.getElementById('auth-wall').style.display='none';
-    loadAll(); renderSessions();
-  }
-},3000);
-
 // Keydown on modal input — safe after DOM ready
 document.getElementById('new-name').addEventListener('keydown',e=>{ if(e.key==='Enter') createSession(); });
 </script>

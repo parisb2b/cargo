@@ -1,0 +1,469 @@
+# PROMPT CLAUDE CODE — Container Optimizer
+## Déploiement complet — cargo.sasfr.com
+
+---
+
+## RÈGLES D'EXÉCUTION
+
+1. `git add -A && git commit -m "..." && git push` après chaque étape validée
+2. Résoudre les erreurs de manière autonome sans confirmation
+3. Pusher en temps réel — ne jamais attendre la fin
+4. Générer `MAJ-CARGO.txt` à la fin
+5. **Jamais** `--project` Firebase sans `cargo-optimizer` (nouveau projet)
+
+---
+
+## CONTEXTE
+
+Fichier source HTML validé :
+```
+~/Downloads/container-optimizer.html
+```
+
+Logiciel d'optimisation de remplissage de conteneurs maritimes.
+- Algorithme EP-3DBP (Extreme Point 3D Bin Packing)
+- Vue 3D WebGL (Three.js)
+- Bilingue FR/中文
+- Import/Export Excel
+- Actuellement : données en localStorage (non partagé)
+
+**Objectif** : déployer sur `cargo.sasfr.com` avec Firebase Auth (Google) + Firestore pour partage des chargements en temps réel entre utilisateurs connectés.
+
+---
+
+## ÉTAPE 0 — Créer le projet Firebase
+
+### 0a. Dans la Firebase Console, créer un nouveau projet :
+Ouvrir : https://console.firebase.google.com/
+
+- Nom du projet : **cargo-optimizer**
+- ID du projet : **cargo-optimizer** (ou laisser Firebase générer)
+- Désactiver Google Analytics (pas nécessaire)
+- Activer le **Forfait Blaze** (paiement à l'usage) — nécessaire pour les fonctionnalités avancées
+
+### 0b. Dans le projet cargo-optimizer, activer :
+
+**Authentication :**
+- Firebase Console > Authentication > Sign-in method
+- Activer **Google** comme provider
+- Email de support : `interenovations@gmail.com`
+- Domaine autorisé : ajouter `cargo.sasfr.com`
+
+**Firestore Database :**
+- Firebase Console > Firestore Database > Créer une base de données
+- Mode : **Production**
+- Région : **europe-west1**
+
+**Hosting :**
+- Firebase Console > Hosting > Commencer
+- Laisser la config par défaut
+
+### 0c. Créer l'app web dans le projet :
+- Firebase Console > Paramètres du projet > Ajouter une application > Web
+- Pseudo : `cargo-web`
+- Activer Firebase Hosting pour cette app
+- **Copier le firebaseConfig complet** (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId)
+
+### 0d. Mettre à jour ce fichier avec la vraie config :
+Remplacer dans ce prompt les valeurs `FIREBASE_*` ci-dessous avec les vraies valeurs copiées.
+
+```
+AIzaSyDyk2XwTDY2tjbnUsVRI-hg3jptd9sNe2Y
+cargo-optimizer-fca82.firebaseapp.com=cargo-optimizer.firebaseapp.com
+cargo-optimizer-fca82=cargo-optimizer
+cargo-optimizer-fca82.firebasestorage.app=cargo-optimizer.firebasestorage.app
+89903431919
+1:89903431919:web:52c9e432d3f4839b03db1a
+```
+
+---
+
+## ÉTAPE 1 — Initialiser le repo GitHub et dossier local
+
+```bash
+mkdir -p ~/mactell/cargo
+cp ~/Downloads/container-optimizer.html ~/mactell/cargo/index.html
+cd ~/mactell/cargo
+git init
+git branch -M main
+```
+
+Créer `.gitignore` :
+```
+node_modules/
+.vercel/
+*.DS_Store
+.env
+firebase-debug.log
+```
+
+Créer `README.md` :
+```markdown
+# Container Optimizer — cargo.sasfr.com
+Optimiseur de remplissage de conteneurs maritimes 3D.
+Algorithme EP-3DBP · Three.js WebGL · Firebase Auth · Firestore
+```
+
+Créer `vercel.json` :
+```json
+{
+  "version": 2,
+  "builds": [{ "src": "index.html", "use": "@vercel/static" }],
+  "routes": [{ "src": "/(.*)", "dest": "/index.html" }]
+}
+```
+
+```bash
+gh repo create parisb2b/cargo --public --source=. --push
+```
+
+---
+
+## ÉTAPE 2 — Modifier index.html : Firebase Auth + Firestore
+
+### 2a. Ajouter le SDK Firebase dans le `<head>` (juste après les autres scripts)
+
+Remplacer `FIREBASE_*` par les vraies valeurs du projet cargo-optimizer :
+
+```html
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import {
+    getAuth, signInWithPopup, signOut, onAuthStateChanged,
+    GoogleAuthProvider
+  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import {
+    getFirestore, collection, doc, setDoc, deleteDoc, getDoc,
+    onSnapshot, query, where, orderBy, serverTimestamp
+  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDyk2XwTDY2tjbnUsVRI-hg3jptd9sNe2Y",
+    authDomain: "cargo-optimizer-fca82.firebaseapp.com",
+    projectId: "cargo-optimizer-fca82",
+    storageBucket: "cargo-optimizer-fca82.firebasestorage.app",
+    messagingSenderId: "89903431919",
+    appId: "1:89903431919:web:52c9e432d3f4839b03db1a"
+  });
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  window._firebase = { auth, db, provider, signInWithPopup, signOut,
+    onAuthStateChanged, GoogleAuthProvider, collection, doc, setDoc,
+    deleteDoc, getDoc, onSnapshot, query, where, orderBy, serverTimestamp };
+
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+```
+
+### 2b. Ajouter la barre d'auth dans le HTML — dans le `<nav>`, ajouter à la fin du `.nav-right` :
+
+```html
+<!-- Auth section in nav -->
+<div id="auth-section" style="display:flex;align-items:center;gap:8px;margin-left:8px;padding-left:8px;border-left:1px solid var(--border)">
+  <div id="auth-user" style="display:none;align-items:center;gap:8px">
+    <img id="auth-avatar" style="width:28px;height:28px;border-radius:50%;object-fit:cover" src="" alt="">
+    <span id="auth-name" style="font-size:12px;font-weight:500;color:var(--text);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    <button class="btn btn-sm btn-ghost" onclick="doSignOut()" id="btn-signout">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+  <button id="btn-signin" class="btn btn-sm btn-primary" onclick="doSignIn()" style="display:none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+    <span id="signin-lbl">Connexion Google</span>
+  </button>
+</div>
+```
+
+### 2c. Ajouter un overlay de connexion (avant le premier `<div class="page">`) :
+
+```html
+<!-- AUTH WALL — shown when not logged in -->
+<div id="auth-wall" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);z-index:500;align-items:center;justify-content:center;flex-direction:column">
+  <div style="text-align:center;color:#fff;max-width:360px;padding:40px">
+    <div style="font-size:48px;margin-bottom:16px">📦</div>
+    <h1 style="font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px">Container<span style="color:#60a5fa">Optimizer</span></h1>
+    <p style="font-size:14px;color:rgba(255,255,255,.6);margin-bottom:32px;line-height:1.6">Optimiseur de remplissage de conteneurs maritimes 3D.<br>Connectez-vous pour accéder à vos chargements.</p>
+    <button onclick="doSignIn()" style="display:inline-flex;align-items:center;gap:10px;background:#fff;color:#1a1a18;padding:12px 24px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.3);transition:transform .1s" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Connexion avec Google
+    </button>
+    <p style="margin-top:20px;font-size:11px;color:rgba(255,255,255,.3)">Vos données sont privées et sécurisées.</p>
+  </div>
+</div>
+```
+
+### 2d. Remplacer `save()`, `loadAll()` et `saveAll()` par les versions Firebase :
+
+Trouver et remplacer les fonctions `saveAll()` et `loadAll()` par :
+
+```javascript
+let _currentUser = null;
+let _firestoreUnsub = null;
+
+function getUserId(){
+  return _currentUser ? _currentUser.uid : null;
+}
+
+function saveAll(){
+  // Backup local
+  try{ localStorage.setItem('cargo_sessions_backup', JSON.stringify({sessions, activeSession})); }catch(e){}
+  // Firestore sync
+  const uid = getUserId();
+  if(!uid || !window._firebase) return;
+  const { db, doc, setDoc, serverTimestamp } = window._firebase;
+  sessions.forEach(function(s){
+    setDoc(doc(db, 'cargo_sessions', uid+'_'+s.id), {
+      ...s, ownerId: uid, updatedAt: serverTimestamp()
+    }).catch(console.error);
+  });
+}
+
+function loadAll(){
+  // Load from backup first (instant display)
+  try{
+    const d = localStorage.getItem('cargo_sessions_backup');
+    if(d){ const p=JSON.parse(d); sessions=p.sessions||[]; activeSession=p.activeSession||null; }
+  }catch(e){ sessions=[]; activeSession=null; }
+}
+
+function startFirestoreSync(){
+  const uid = getUserId();
+  if(!uid || !window._firebase) return;
+  if(_firestoreUnsub) _firestoreUnsub();
+  const { db, collection, query, where, orderBy, onSnapshot } = window._firebase;
+  _firestoreUnsub = onSnapshot(
+    query(collection(db,'cargo_sessions'), where('ownerId','==',uid), orderBy('updatedAt','desc')),
+    function(snap){
+      sessions = [];
+      snap.forEach(function(d){ sessions.push(d.data()); });
+      try{ localStorage.setItem('cargo_sessions_backup', JSON.stringify({sessions, activeSession})); }catch(e){}
+      if(!window._firebaseReady) return;
+      renderSessions();
+    },
+    function(err){ console.error('Firestore sync error:', err); }
+  );
+}
+
+function doSignIn(){
+  const { auth, signInWithPopup, provider } = window._firebase;
+  signInWithPopup(auth, provider).catch(console.error);
+}
+
+function doSignOut(){
+  if(_firestoreUnsub){ _firestoreUnsub(); _firestoreUnsub=null; }
+  const { auth, signOut } = window._firebase;
+  signOut(auth).then(function(){
+    sessions=[]; activeSession=null;
+    renderSessions();
+  });
+}
+
+function deleteSession(id){
+  sessions = sessions.filter(function(s){ return s.id!==id; });
+  const uid = getUserId();
+  if(uid && window._firebase){
+    const { db, doc, deleteDoc } = window._firebase;
+    deleteDoc(doc(db,'cargo_sessions', uid+'_'+id)).catch(console.error);
+  }
+  if(activeSession===id) activeSession=null;
+  saveAll(); renderSessions();
+}
+```
+
+### 2e. Ajouter le listener d'authentification — dans la section INIT (fin du script), remplacer :
+
+```javascript
+loadAll();
+if(!window._firebaseReady) renderSessions();
+applyLang();
+```
+
+Par :
+
+```javascript
+applyLang();
+
+// Auth wall — show until Firebase responds
+document.getElementById('auth-wall').style.display='flex';
+
+window.addEventListener('firebase-ready', function(){
+  const { auth, onAuthStateChanged } = window._firebase;
+  onAuthStateChanged(auth, function(user){
+    _currentUser = user;
+    const authWall = document.getElementById('auth-wall');
+    const authUser = document.getElementById('auth-user');
+    const btnSignin = document.getElementById('btn-signin');
+    if(user){
+      // Logged in
+      authWall.style.display = 'none';
+      authUser.style.display = 'flex';
+      btnSignin.style.display = 'none';
+      const avatar = document.getElementById('auth-avatar');
+      const name = document.getElementById('auth-name');
+      if(avatar) avatar.src = user.photoURL || '';
+      if(name) name.textContent = user.displayName || user.email || '';
+      loadAll();
+      startFirestoreSync();
+      if(!activeSession) renderSessions(); else showPage('sessions');
+    } else {
+      // Not logged in
+      authWall.style.display = 'flex';
+      authUser.style.display = 'none';
+      btnSignin.style.display = 'inline-flex';
+      sessions = []; activeSession = null;
+    }
+  });
+});
+
+// Fallback: if Firebase fails to load
+setTimeout(function(){
+  if(!window._firebase){
+    document.getElementById('auth-wall').style.display='none';
+    loadAll(); renderSessions();
+  }
+},3000);
+```
+
+### 2f. Ajouter les traductions manquantes pour l'auth dans T.fr et T.zh :
+
+Dans `T.fr`, ajouter :
+```javascript
+signin_lbl: 'Connexion Google',
+signout_lbl: 'Déconnexion',
+```
+
+Dans `T.zh`, ajouter :
+```javascript
+signin_lbl: 'Google 登录',
+signout_lbl: '退出登录',
+```
+
+Dans `applyLang()`, ajouter :
+```javascript
+s('signin-lbl','signin_lbl');
+```
+
+---
+
+## ÉTAPE 3 — Règles Firestore
+
+Dans Firebase Console > projet `cargo-optimizer` > Firestore Database > Règles :
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Chaque utilisateur ne voit et ne modifie que ses propres sessions
+    match /cargo_sessions/{docId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == resource.data.ownerId;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.ownerId;
+    }
+  }
+}
+```
+
+Déployer les règles.
+
+---
+
+## ÉTAPE 4 — Déployer sur Vercel
+
+```bash
+cd ~/mactell/cargo
+npx vercel --prod --yes
+```
+
+Récupérer l'URL de déploiement Vercel (ex: `cargo-xyz.vercel.app`).
+
+---
+
+## ÉTAPE 5 — Connecter le domaine cargo.sasfr.com
+
+### 5a. Dans Vercel :
+- Dashboard > projet `cargo` > Settings > Domains
+- Ajouter `cargo.sasfr.com`
+- Vercel donne un CNAME à configurer (ex: `cname.vercel-dns.com`)
+
+### 5b. Dans IONOS (ton registrar) :
+- Aller sur : https://my.ionos.fr/domain-details/cargo.sasfr.com
+- DNS > Ajouter un enregistrement CNAME :
+  - Nom : `cargo` (ou `@` si sous-domaine racine)
+  - Valeur : ce que Vercel indique (ex: `cname.vercel-dns.com`)
+  - TTL : 3600
+
+### 5c. Dans Firebase Auth :
+- Authentication > Settings > Domaines autorisés
+- Ajouter : `cargo.sasfr.com`
+
+### 5d. Vérifier la propagation DNS (peut prendre 5-30 min) :
+```bash
+dig cargo.sasfr.com CNAME
+```
+
+---
+
+## ÉTAPE 6 — Vérifications complètes
+
+1. Ouvrir `https://cargo.sasfr.com` → l'overlay de connexion apparaît
+2. Cliquer "Connexion avec Google" → popup Google → connexion réussie
+3. L'overlay disparaît → avatar + nom affiché dans la nav
+4. Créer un chargement → ajouter des colis → visualiser en 3D WebGL
+5. Ouvrir dans un 2e navigateur avec le même compte → le chargement apparaît
+6. Ouvrir avec un compte différent → ne voit pas les chargements de l'autre
+7. Déconnexion → overlay revient
+8. Toggle FR/中文 → tout traduit y compris les nouvelles sections viz
+9. Importer le fichier `chargement-15-3-2025-40GP.xlsx` → 33/33 colis placés
+10. Vue 3D → X-Ray → Séquence → Presets ISO/Face/Côté/Dessus
+
+---
+
+## ÉTAPE 7 — Rapport final
+
+Créer `~/mactell/cargo/MAJ-CARGO.txt` avec :
+- URL Vercel finale
+- URL domaine personnalisé : cargo.sasfr.com
+- Firebase Project ID
+- Collections Firestore créées
+- Résultat des 10 vérifications
+
+---
+
+## RÉSUMÉ ARCHITECTURE
+
+```
+cargo.sasfr.com
+├── Vercel (hosting statique)
+│   └── index.html (SPA pure HTML/JS)
+├── Firebase cargo-optimizer
+│   ├── Authentication (Google OAuth)
+│   └── Firestore
+│       └── cargo_sessions/{uid}_{sessionId}
+│           ├── id, name, container, colis
+│           ├── ownerId (uid Firebase)
+│           └── updatedAt (serverTimestamp)
+└── GitHub parisb2b/cargo (source)
+```
+
+**Sécurité** :
+- Chaque utilisateur ne voit QUE ses propres chargements (règle Firestore `ownerId == auth.uid`)
+- L'auth Google empêche tout accès anonyme
+- Le localStorage sert de cache offline uniquement
+
+---
+
+## EN CAS D'ERREUR
+
+| Erreur | Solution |
+|---|---|
+| `auth/unauthorized-domain` | Ajouter `cargo.sasfr.com` dans Firebase Auth > Domaines autorisés |
+| `permission-denied` Firestore | Vérifier les règles Firestore — bien déployées ? |
+| DNS ne se propage pas | Attendre 30 min, ou vérifier CNAME dans IONOS |
+| `gh: command not found` | `brew install gh && gh auth login` |
+| `vercel: command not found` | `npm i -g vercel && vercel login` |
+| Three.js ne charge pas | Vérifier la connexion internet — CDN cdnjs.cloudflare.com |
