@@ -593,12 +593,11 @@ function saveAll(){
     localStorage.setItem('clo_sessions', JSON.stringify(sessions));
     localStorage.setItem('clo_session_trash', JSON.stringify(sessionTrash));
     localStorage.setItem('clo_colis_trash', JSON.stringify(colisTrash));
-    showSaveBadge();
     updateArchiveBadges();
   }catch(e){}
-  // Sync Firestore différé
+  // Sync Firestore différé (appelé par syncFirestore ou manualSave)
   clearTimeout(saveAll._fsTimer);
-  saveAll._fsTimer = setTimeout(syncFirestore, 800);
+  saveAll._fsTimer = setTimeout(syncFirestore, 1500);
 }
 function loadAll(){
   try{ const d=localStorage.getItem('clo_sessions'); if(d)sessions=JSON.parse(d); }catch(e){ sessions=[]; }
@@ -644,11 +643,6 @@ function syncFirestore(){
   sessions.forEach(function(s){
     if(!s||!s.id) return;
     var data=sanitizeForFirestore(s);
-    // Firestore rejects nested arrays — serialize colis to JSON string
-    if(data.colis&&Array.isArray(data.colis)){
-      data._colisJson=JSON.stringify(data.colis);
-      delete data.colis;
-    }
     data.updatedAt=firebase.firestore.FieldValue.serverTimestamp();
     data.syncedAt=new Date().toISOString();
     db.collection('cargo_sessions').doc(s.id).set(data)
@@ -666,7 +660,6 @@ function manualSave(){
   if(!currentSessionId) return;
   // Sauvegarder localStorage + Firestore immédiatement
   try{ localStorage.setItem('clo_sessions',JSON.stringify(sessions)); }catch(e){}
-  showSaveBadge();
   syncFirestore();
   // Visual feedback on button
   const btn=document.getElementById('btn-save-manual');
@@ -733,7 +726,6 @@ function createSession(){
   document.getElementById('new-name').value='';
   closeModal();
   saveAll();
-  syncFirestore(); // Force sync immédiat
   renderSessions();
   initContainerUI();
   initColisTable();
@@ -3337,8 +3329,6 @@ window.addEventListener('firebase-ready', function(){
       snap.forEach(function(d){
         var data=d.data();
         if(!data||!data.id) return;
-        // Restore colis from JSON string (Firestore doesn't allow nested arrays)
-        if(data._colisJson){ try{ data.colis=JSON.parse(data._colisJson); delete data._colisJson; }catch(e){} }
         var idx=sessions.findIndex(function(s){ return s.id===data.id; });
         if(idx===-1){
           sessions.push(data); changed=true;
