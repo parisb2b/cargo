@@ -1,7 +1,7 @@
 RAPPORT DE DÉPLOIEMENT — CONTAINER OPTIMIZER
 ==============================================
 
-Date : 2026-05-24
+Date : 2026-05-29 12:45 CEST
 Projet : Container Load Optimizer (CARGO)
 Domaine cible : cargo.sasfr.com
 
@@ -9,59 +9,98 @@ Domaine cible : cargo.sasfr.com
 
 1. URL DE PRODUCTION VERCEL
 ──────────────────────────────────────────────
-Production  : https://cargo-pied-kappa.vercel.app
-Dernier     : https://cargo-paeqox5y3-parisb2bs-projects.vercel.app
-Inspect     : https://vercel.com/parisb2bs-projects/cargo/5XGa3w93Hv4nP6T2KNnTVDWhQDp6
+Production actuelle : https://cargo-l5j1tnlob-parisb2bs-projects.vercel.app
+Domaine custom      : https://cargo.sasfr.com (alias Vercel OK, DNS à mettre à jour)
+Repo GitHub         : https://github.com/parisb2b/cargo
+Branche             : master
+Dernier commit      : f53d53d — Merge remote history with Firebase Auth update
 
-2. DÉPÔT GITHUB
+2. FIREBASE — PROJET cargo-optimizer-fca82
 ──────────────────────────────────────────────
-URL         : https://github.com/parisb2b/cargo
-Visibilité  : Public
-Branche     : master
-Commit      : 62b4b9c — Ajout CLAUDE.md + RAPPEL-SAUVEGARDE.txt
+Projet ID    : cargo-optimizer-fca82
+Auth Domain  : cargo-optimizer-fca82.firebaseapp.com
+Collection   : cargo_sessions
+Clé API      : AIzaSyDyk2XwTDY2tjbnUsVRI-hg3jptd9sNe2Y
 
-Fichiers de verrouillage :
-  - CLAUDE.md              : Guide d'architecture
-  - RAPPEL-SAUVEGARDE.txt  : État verrouillé au 24/05/2026
+Authentification :
+  - Provider Google activé (à vérifier)
+  - Domaines autorisés : ajouter cargo.sasfr.com
 
-3. STATUT DES TESTS (validé 2026-05-24)
+3. FONCTIONNALITÉS DÉPLOYÉES (29 Mai 2026)
 ──────────────────────────────────────────────
-✅ Bouton Enregistrer : ACTIF — plus grisé ni disabled
-✅ test01 — 20GP Export Guadeloupe : 3 colis chargés (MP-R22-MiniPelle, ACCESSOIRE-PL-01, PALETTE-BOIS-EPAL)
-✅ test02 — 40HC Export Martinique : 3 colis chargés (GROUPE-ELEC-50KW, TUYAUTERIE-INOX, CAISSE-OUTILLAGE)
-✅ Navigation : onglet Liste des cargos avec sections En cours / Historique
-✅ Chargement de session : clic sur un cargo → colis affichés
-✅ Sauvegarde locale : localStorage fonctionnel en fallback
-⚠️  Firestore : règles publiques à configurer dans la console Firebase (allow read, write: if true;)
+✅ Firebase SDK 10.12.0 (auth + firestore + app)
+✅ Auth wall — overlay de connexion Google
+✅ Section auth dans navbar (avatar, nom, déconnexion)
+✅ saveAll() → localStorage backup + sync Firestore temps réel
+✅ loadAll() → localStorage instantané + écoute Firestore
+✅ deleteSession() → suppression locale + Firestore
+✅ startFirestoreSync() → écoute onSnapshot Firestore
+✅ doSignIn() / doSignOut() → Google OAuth
+✅ Traductions FR/中文 (signin_lbl, signout_lbl)
+✅ Algorithme EP-3DBP + Vue 3D WebGL Three.js
+✅ Import/Export Excel
+✅ Basculer FR/中文
 
 4. ARCHITECTURE FIRESTORE
 ──────────────────────────────────────────────
-Projet Firebase : cargo-optimizer-fca82
-Collection      : cargo_sessions
-Règles requises : allow read, write: if true;
+Collection : cargo_sessions
+Structure   : {uid}_{sessionId}
+  - id, name, created, container, colis
+  - ownerId (uid Firebase Auth)
+  - updatedAt (serverTimestamp)
 
-Structure d'un document cargo_sessions :
-  - id (string)           : Identifiant unique de session
-  - name (string)         : Nom du chargement
-  - created (string)      : Date de création (format FR)
-  - container (map)       : Dimensions {l, w, h, max, type}
-  - colis (array)         : Liste des colis
-  - updatedAt (timestamp) : Horodatage serveur Firestore
-
-5. CORRECTIFS APPLIQUÉS (v5)
+Règles Firestore à déployer :
 ──────────────────────────────────────────────
-  - Renommage _db() → fsDb() et _fs() → fsUtils() pour éviter conflits
-  - Bouton Enregistrer : TOUJOURS ACTIF (disabled retiré)
-  - Message d'aide si clic sans session sélectionnée
-  - CSS #btn-save:disabled / :not(:disabled) pour retour visuel
-  - Injection automatique de test01 et test02 au chargement
-  - Tooltip contextuel sur le bouton Enregistrer
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /cargo_sessions/{docId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == resource.data.ownerId;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.ownerId;
+    }
+  }
+}
 
-6. FICHIERS DU PROJET
+5. ACTIONS REQUISES (URGENT)
 ──────────────────────────────────────────────
-  - index.html                   : Application principale
-  - container-optimizer OK.html  : Source originale (conservée)
-  - PROMPT-CARGO.md              : Spécifications du projet
-  - .gitignore                   : Exclusions Git
-  - vercel.json                  : Configuration de déploiement Vercel
-  - MAJ-CARGO.txt                : Ce rapport
+🔴 IONOS DNS : Modifier le A record de cargo.sasfr.com
+   Ancienne valeur : 217.160.0.123
+   Nouvelle valeur  : 76.76.21.21
+   Panneau : https://my.ionos.fr/domain-details/cargo.sasfr.com
+
+🔴 Firebase Console > Auth > Settings > Domaines autorisés
+   Ajouter : cargo.sasfr.com
+
+🔴 Firebase Console > Firestore > Règles
+   Déployer les règles ci-dessus (section 4)
+
+🔴 Vérifier propagation DNS : dig cargo.sasfr.com A
+
+6. VÉRIFICATIONS (après DNS)
+──────────────────────────────────────────────
+[ ] 1. Ouvrir cargo.sasfr.com → Auth wall s'affiche
+[ ] 2. Connexion Google → popup → connexion OK
+[ ] 3. Auth wall disparaît → avatar + nom dans navbar
+[ ] 4. Créer un chargement → ajouter colis → visualiser 3D
+[ ] 5. 2e navigateur même compte → chargement synchronisé
+[ ] 6. Compte différent → ne voit PAS les chargements
+[ ] 7. Déconnexion → Auth wall revient
+[ ] 8. Toggle FR/中文 → tout traduit
+[ ] 9. Import Excel → colis placés
+[ ] 10. Vue 3D → X-Ray → Séquence → Presets
+
+7. SÉCURITÉ
+──────────────────────────────────────────────
+- Chaque utilisateur ne voit QUE ses chargements (ownerId)
+- Auth Google obligatoire (pas d'accès anonyme)
+- localStorage = cache offline uniquement
+- SSO Protection Vercel active sur *.vercel.app (pas custom domain)
+
+8. DÉPLOIEMENT (29 Mai 2026 — par Claude Code)
+──────────────────────────────────────────────
+- Fichier source : container-optimizer-final.html (107 KB)
+- Déploiement GitHub : git push master → auto-deploy Vercel
+- Firebase configuré dans index.html (pas de .env)
+- Commit f53d53d : Merge remote history with Firebase Auth update
