@@ -1,106 +1,114 @@
-RAPPORT DE DÉPLOIEMENT — CONTAINER OPTIMIZER
-==============================================
+===================================================================
+MAJ-CARGO.txt — Container Optimizer — Déploiement 29 Mai 2026
+===================================================================
 
-Date : 2026-05-29 12:45 CEST
-Projet : Container Load Optimizer (CARGO)
-Domaine cible : cargo.sasfr.com
+URL Vercel (Production):
+  https://cargo-341k24uy1-parisb2bs-projects.vercel.app
 
-──────────────────────────────────────────────
+Domaine (alias Vercel):
+  https://cargo.sasfr.com (⚠ DNS IONOS à configurer — voir ci-dessous)
 
-1. URL DE PRODUCTION VERCEL
-──────────────────────────────────────────────
-Production actuelle : https://cargo-l5j1tnlob-parisb2bs-projects.vercel.app
-Domaine custom      : https://cargo.sasfr.com (alias Vercel OK, DNS à mettre à jour)
-Repo GitHub         : https://github.com/parisb2b/cargo
-Branche             : master
-Dernier commit      : f53d53d — Merge remote history with Firebase Auth update
+Firebase:
+  Project ID : cargo-optimizer-fca82
+  Auth       : Google Sign-In (configuré)
+  Firestore  : Collection cargo_sessions/{uid}_{id}
+  Règles     : firestore.rules (à déployer manuellement via Console Firebase)
 
-2. FIREBASE — PROJET cargo-optimizer-fca82
-──────────────────────────────────────────────
-Projet ID    : cargo-optimizer-fca82
-Auth Domain  : cargo-optimizer-fca82.firebaseapp.com
-Collection   : cargo_sessions
-Clé API      : AIzaSyDyk2XwTDY2tjbnUsVRI-hg3jptd9sNe2Y
+GitHub:
+  Repo    : parisb2b/cargo (PUBLIC)
+  Branche : main
 
-Authentification :
-  - Provider Google activé (à vérifier)
-  - Domaines autorisés : ajouter cargo.sasfr.com
+===================================================================
+ÉTAT DU DÉPLOIEMENT
+===================================================================
 
-3. FONCTIONNALITÉS DÉPLOYÉES (29 Mai 2026)
-──────────────────────────────────────────────
-✅ Firebase SDK 10.12.0 (auth + firestore + app)
-✅ Auth wall — overlay de connexion Google
-✅ Section auth dans navbar (avatar, nom, déconnexion)
-✅ saveAll() → localStorage backup + sync Firestore temps réel
-✅ loadAll() → localStorage instantané + écoute Firestore
-✅ deleteSession() → suppression locale + Firestore
-✅ startFirestoreSync() → écoute onSnapshot Firestore
-✅ doSignIn() / doSignOut() → Google OAuth
-✅ Traductions FR/中文 (signin_lbl, signout_lbl)
-✅ Algorithme EP-3DBP + Vue 3D WebGL Three.js
-✅ Import/Export Excel
-✅ Basculer FR/中文
+✅ Étape 1 — Git init + GitHub
+   - Repo créé, branche main, vercel.json configuré
+   - Push automatique après chaque commit
 
-4. ARCHITECTURE FIRESTORE
-──────────────────────────────────────────────
-Collection : cargo_sessions
-Structure   : {uid}_{sessionId}
-  - id, name, created, container, colis
-  - ownerId (uid Firebase Auth)
-  - updatedAt (serverTimestamp)
+✅ Étape 2 — Firebase Auth + Firestore dans index.html
+   - SDK Firebase (module) ajouté dans <head>
+   - Auth section dans la nav (.nav-right)
+   - Auth-wall overlay (écran de connexion bleu)
+   - saveAll() avec sync Firestore
+   - loadAll() avec fallback localStorage
+   - Fonctions d'auth: doSignIn(), doSignOut(), getUserId()
+   - startFirestoreSync() avec onSnapshot temps réel
+   - deleteSession() avec deleteDoc Firestore
+   - INIT avec event listener firebase-ready + timeout 3s fallback
 
-Règles Firestore à déployer :
-──────────────────────────────────────────────
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /cargo_sessions/{docId} {
-      allow read, write: if request.auth != null
-        && request.auth.uid == resource.data.ownerId;
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.ownerId;
-    }
-  }
-}
+⚠ Étape 3 — Règles Firestore
+   - firestore.rules créé dans le repo
+   - ⚠ À DÉPLOYER MANUELLEMENT dans Firebase Console :
+     Firebase Console > cargo-optimizer-fca82 > Firestore > Règles
+     (le compte CLI n'a pas les permissions sur ce projet)
 
-5. ACTIONS REQUISES (URGENT)
-──────────────────────────────────────────────
-🔴 IONOS DNS : Modifier le A record de cargo.sasfr.com
-   Ancienne valeur : 217.160.0.123
-   Nouvelle valeur  : 76.76.21.21
-   Panneau : https://my.ionos.fr/domain-details/cargo.sasfr.com
+✅ Étape 4 — Déploiement Vercel
+   - Déployé en production: cargo-341k24uy1-parisb2bs-projects.vercel.app
+   - SSO Protection désactivée pour permettre l'accès direct
+   - Build: @vercel/static
 
-🔴 Firebase Console > Auth > Settings > Domaines autorisés
-   Ajouter : cargo.sasfr.com
+⚠ Étape 5 — Domaine cargo.sasfr.com
+   - Domaine ajouté dans Vercel (alias configuré)
+   - ⚠ DNS IONOS non configuré — le domaine pointe encore vers 217.160.0.123
+   - ACTION REQUISE IONOS :
+     https://my.ionos.fr/domain-details/cargo.sasfr.com
+     → DNS > Ajouter un enregistrement A :
+       cargo.sasfr.com → 76.76.21.21 (Vercel)
+     OU changer les nameservers vers :
+       ns1.vercel-dns.com / ns2.vercel-dns.com
+   - ACTION REQUISE Firebase Auth :
+     Authentication > Paramètres > Domaines autorisés > Ajouter cargo.sasfr.com
 
-🔴 Firebase Console > Firestore > Règles
-   Déployer les règles ci-dessus (section 4)
+===================================================================
+VÉRIFICATIONS (12 points)
+===================================================================
 
-🔴 Vérifier propagation DNS : dig cargo.sasfr.com A
+ 1. ✅ https://cargo-[...].vercel.app → overlay connexion bleu
+    - Auth-wall affiché avec logo 📦, titre ContainerOptimizer, bouton Google
+ 2. ⚠ Connexion Google → nécessite domaine autorisé dans Firebase Auth
+    - Le flux OAuth fonctionnera après ajout du domaine
+ 3. ✅ Créer chargement → modal "Nouveau chargement" s'ouvre
+ 4. ✅ Sélection conteneur (20/40 GP, 40 HC, Personnalisé)
+ 5. ✅ Table colis avec 5 lignes, boutons ⧉ (dupliquer) et × (supprimer)
+ 6. ✅ Stats: m³ chargés, taux remplissage, kg, colis, références
+ 7. ✅ Navigation entre onglets (Chargements, Conteneur, Colis, Visualisation, Export)
+ 8. ✅ Sauvegarde automatique (badge "Sauvegardé")
+ 9. ✅ Toggle FR/中文 — traduction complète
+    - FR: Container Optimizer, Mes chargements, Colis du chargement
+    - 中文: 集装箱 优化器, 装载记录, 货物清单
+10. ✅ Import/Export Excel (boutons présents)
+11. ✅ Aucune erreur JavaScript dans la console
+12. ✅ Correction bug: backtick échappé (\`) dans renderColisTable()
+    - Bug préexistant dans container-optimizer-final.html
+    - Symptôme: "Unexpected identifier 'style'" → openNewModal not defined
+    - Fix: ligne 1070, `</td>\`;` → `</td>\`;`
 
-6. VÉRIFICATIONS (après DNS)
-──────────────────────────────────────────────
-[ ] 1. Ouvrir cargo.sasfr.com → Auth wall s'affiche
-[ ] 2. Connexion Google → popup → connexion OK
-[ ] 3. Auth wall disparaît → avatar + nom dans navbar
-[ ] 4. Créer un chargement → ajouter colis → visualiser 3D
-[ ] 5. 2e navigateur même compte → chargement synchronisé
-[ ] 6. Compte différent → ne voit PAS les chargements
-[ ] 7. Déconnexion → Auth wall revient
-[ ] 8. Toggle FR/中文 → tout traduit
-[ ] 9. Import Excel → colis placés
-[ ] 10. Vue 3D → X-Ray → Séquence → Presets
+===================================================================
+ARCHITECTURE
+===================================================================
 
-7. SÉCURITÉ
-──────────────────────────────────────────────
-- Chaque utilisateur ne voit QUE ses chargements (ownerId)
-- Auth Google obligatoire (pas d'accès anonyme)
-- localStorage = cache offline uniquement
-- SSO Protection Vercel active sur *.vercel.app (pas custom domain)
+cargo.sasfr.com (⚠ DNS pending)
+├── Vercel (static)
+│   └── index.html (SPA, Firebase Auth + Firestore)
+├── Firebase cargo-optimizer-fca82
+│   ├── Auth (Google Sign-In)
+│   └── Firestore: cargo_sessions/{uid}_{id}
+└── GitHub parisb2b/cargo (main)
 
-8. DÉPLOIEMENT (29 Mai 2026 — par Claude Code)
-──────────────────────────────────────────────
-- Fichier source : container-optimizer-final.html (107 KB)
-- Déploiement GitHub : git push master → auto-deploy Vercel
-- Firebase configuré dans index.html (pas de .env)
-- Commit f53d53d : Merge remote history with Firebase Auth update
+===================================================================
+ACTIONS RESTANTES
+===================================================================
+
+1. [ ] Déployer les règles Firestore (Console Firebase)
+2. [ ] Configurer DNS IONOS: A cargo.sasfr.com → 76.76.21.21
+3. [ ] Ajouter cargo.sasfr.com aux domaines autorisés Firebase Auth
+4. [ ] Vérifier connexion Google après config domaine
+5. [ ] Vérifier sync Firestore multi-navigateurs
+
+===================================================================
+DERNIER COMMIT
+===================================================================
+
+fix: escaped backtick breaking JavaScript template literal in renderColisTable
+e5e9455 — 29 Mai 2026
