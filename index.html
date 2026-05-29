@@ -593,11 +593,12 @@ function saveAll(){
     localStorage.setItem('clo_sessions', JSON.stringify(sessions));
     localStorage.setItem('clo_session_trash', JSON.stringify(sessionTrash));
     localStorage.setItem('clo_colis_trash', JSON.stringify(colisTrash));
+    showSaveBadge();
     updateArchiveBadges();
   }catch(e){}
   // Sync Firestore différé (appelé par syncFirestore ou manualSave)
   clearTimeout(saveAll._fsTimer);
-  saveAll._fsTimer = setTimeout(syncFirestore, 1500);
+  saveAll._fsTimer = setTimeout(syncFirestore, 800);
 }
 function loadAll(){
   try{ const d=localStorage.getItem('clo_sessions'); if(d)sessions=JSON.parse(d); }catch(e){ sessions=[]; }
@@ -660,6 +661,7 @@ function manualSave(){
   if(!currentSessionId) return;
   // Sauvegarder localStorage + Firestore immédiatement
   try{ localStorage.setItem('clo_sessions',JSON.stringify(sessions)); }catch(e){}
+  showSaveBadge();
   syncFirestore();
   // Visual feedback on button
   const btn=document.getElementById('btn-save-manual');
@@ -726,6 +728,7 @@ function createSession(){
   document.getElementById('new-name').value='';
   closeModal();
   saveAll();
+  syncFirestore(); // Force Firestore sync immediate
   renderSessions();
   initContainerUI();
   initColisTable();
