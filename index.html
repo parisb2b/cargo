@@ -1067,7 +1067,7 @@ function renderColisTable(){
       <td class="del-cell" style="display:flex;gap:3px;align-items:center">
         <button class="del-btn" style="color:var(--accent);border-color:var(--accent-border);background:var(--accent-bg)" onclick="duplicateRow(${i})" title="${t('dup_tooltip')}">⧉</button>
         <button class="del-btn" onclick="deleteRow(${i})" title="${t('del_tooltip')}">×</button>
-      </td>\`;
+      </td>`;
     tbody.appendChild(tr);
   });
   computeSummary();
