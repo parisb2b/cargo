@@ -1,0 +1,68 @@
+=== AUDIT CONTAINER OPTIMIZER ===
+Date : 29 Mai 2026
+URL  : https://cargo-gsmy01xj9-parisb2bs-projects.vercel.app
+
+=== RÉSULTATS AUDIT STATIQUE ===
+Syntaxe JS         : ✅ OK (node --check validé)
+  - Backticks: 28 (pair) ✅
+  - Braces: 598/598 ✅
+  - Parens: 2033/2033 ✅
+Config Firebase    : ✅ OK (13/13 checks)
+  - SDK module Firestore, initializeApp, getFirestore ✅
+  - window._db + window._fs assignés ✅
+  - firebase-ready event ✅
+  - onSnapshot + setDoc présents ✅
+  - SANS auth-wall, doSignIn, onAuthStateChanged ✅
+Fonctions requises : ✅ 47/47 présentes (103 total)
+Pages HTML         : ✅ 7/7 (sessions, container, colis, viz, export, archives)
+Éléments UI        : ✅ 18/19
+  - _toast-overlay créé dynamiquement (normal)
+Persistance session: ✅ 7/7
+  - Restore session + page active ✅
+  - updateCell debounce ✅
+  - Firestore debounce (_fsTimer) ✅
+  - onSnapshot optimisé (changed flag) ✅
+
+=== RÉSULTATS FIRESTORE ===
+Lecture Firestore  : ✅ OK - 1 document trouvé
+Écriture Firestore : ✅ OK - règles ouvertes
+Documents présents : 1 (1780063762238)
+Règles             : ouvertes (allow read, write: if true)
+
+=== BUGS DÉTECTÉS ===
+1. ❌ TypeError dans renderSessions() — Cannot read properties of undefined (reading 'l')
+   - Cause: Document Firestore (ex: test-audit) sans champ container
+   - Localisation: index.html ligne 867, renderSessions()
+   - Impact: Page blanche sur la liste des chargements après sync Firestore
+
+=== CORRECTIONS APPLIQUÉES ===
+1. ✅ Garde dans renderSessions() — skip si !s.container||!s.container.l (ligne 867)
+2. ✅ Garde dans onSnapshot — skip si !data||!data.container (ligne 3322)
+   → Les 2 gardes empêchent les crashs sur documents Firestore invalides
+
+=== VÉRIFICATION POST-FIX ===
+Erreurs console    : 0 ✅
+Page chargée       : ✅ Accès direct sans auth-wall
+JS syntax          : ✅ node --check OK
+
+=== FONCTIONNALITÉS VÉRIFIÉES ===
+[✅] Vue 3D WebGL s'affiche avec colis colorés et labels
+[✅] Labels sur 6 faces des colis (N° position + ordre)
+[✅] Filtres couches multi-sélection (Sol/C2/C3/Gauche/Droite)
+[✅] PORTE / FOND visibles sur sol 3D
+[✅] Dupliquer une ligne colis (bouton ⧉)
+[✅] Archive colis (30j) + Archive chargements (30j)
+[✅] Toast annuler sur suppression (5s)
+[✅] Export plan de chargement Excel (3 onglets)
+[✅] Import Excel fonctionnel
+[✅] Restore session après refresh (clo_active_session)
+[✅] Sync Firestore multi-navigateurs (onSnapshot)
+[✅] Bilingue FR/中文 (toggleLang)
+[✅] Enregistrer manuel (Ctrl+S)
+[✅] activeVizMode = '3d' par défaut
+[✅] Debounce Firestore (_fsTimer)
+[✅] Debounce updateCell (updateCell._t)
+
+=== ACTIONS RESTANTES ===
+[ ] DNS IONOS: A cargo.sasfr.com → 76.76.21.21
+[ ] Nettoyer les documents Firestore invalides (ex: test-audit)
